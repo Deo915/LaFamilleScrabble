@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#090d0b">
+	<title>Simulation de Partie avec IA — La Famille Scrabble</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="shortcut icon" href="logo1.png" type="image/svg+xml">
+	<style>
+		:root{color-scheme:dark;--bg:#090d0b;--panel:#111915;--green:#a4f36b;--muted:#a1aaa3;--line:rgba(255,255,255,.1)}
+		*{box-sizing:border-box}
+		html{scroll-behavior:smooth}
+		body{margin:0;background:var(--bg);color:#f4f7f3;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+		a{color:inherit;text-decoration:none}
+		header{width:min(1160px,calc(100% - 48px));height:88px;margin:auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+		.brand{display:flex;align-items:center;gap:12px;font-weight:750}.brand img{width:48px;height:48px;object-fit:contain;border-radius:12px}
+		nav{display:flex;align-items:center;gap:32px;color:#c1c9c2;font-size:14px}nav a:hover{color:var(--green)}
+		.button{display:inline-flex;align-items:center;gap:9px;border-radius:999px;padding:13px 20px;background:var(--green);color:#10200f;font-weight:750;font-size:14px}
+
+		.sim-wrapper{width:min(1200px,calc(100% - 32px));margin:30px auto;display:grid;grid-template-columns:1fr 380px;gap:28px}
+		.board-container{background:#0e1411;border:1px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;align-items:center}
+		.board{display:grid;grid-template-columns:repeat(15,1fr);gap:2px;width:min(680px,100%);aspect-ratio:1;background:#1a261c;padding:6px;border-radius:12px}
+		.cell{aspect-ratio:1;display:grid;place-items:center;font-size:11px;font-weight:700;border-radius:4px;cursor:pointer;position:relative;user-select:none}
+		.cell.empty{background:#243028}
+		.cell.tw{background:#1e4d3a;color:#a4f36b}
+		.cell.tl{background:#2a5c42;color:#c8ff9a}
+		.cell.dw{background:#3a2a4d;color:#d4b5ff}
+		.cell.dl{background:#4a3a5d;color:#e8d5ff}
+		.cell.star{background:#a4f36b;color:#10200f;font-size:16px}
+		.cell.occupied{background:#f4f7f3;color:#10200f;font-weight:850;font-size:18px}
+
+		.sidebar{display:flex;flex-direction:column;gap:16px}
+		.panel{background:#111915;border:1px solid var(--line);border-radius:16px;padding:18px}
+		.panel h3{margin:0 0 12px;font-size:16px;color:var(--green)}
+		.rack{display:flex;gap:6px;flex-wrap:wrap;min-height:58px}
+		.tile{width:46px;height:50px;background:#f4f7f3;color:#10200f;border-radius:8px;display:grid;place-items:center;font-weight:850;font-size:20px;position:relative;cursor:grab;box-shadow:0 3px 8px #0006}
+		.tile small{position:absolute;bottom:2px;right:3px;font-size:10px;font-weight:700}
+		.tile.selected{outline:3px solid var(--green);transform:translateY(-4px)}
+
+		.scores{display:flex;justify-content:space-between;font-size:15px}
+		.scores strong{color:var(--green);font-size:22px}
+		.controls{display:flex;flex-direction:column;gap:10px}
+		.controls button{padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer;font-size:14px}
+		.btn-play{background:var(--green);color:#10200f}
+		.btn-secondary{background:#1a261c;color:#f4f7f3;border:1px solid var(--line)}
+
+		.advice{background:#1a261c;border-left:4px solid var(--green);padding:14px;border-radius:10px;font-size:14px;line-height:1.6;color:#e0e6e2}
+		.advice strong{color:var(--green)}
+		.log{max-height:180px;overflow-y:auto;font-size:13px;color:var(--muted);line-height:1.5}
+		.log div{padding:4px 0;border-bottom:1px solid #ffffff08}
+
+		.turn-info{font-size:14px;color:var(--muted);margin-bottom:8px}
+		.turn-info strong{color:var(--green)}
+
+		footer{border-top:1px solid var(--line);margin-top:40px;background:#0c100e;padding:30px 24px;text-align:center;color:#818a82;font-size:13px}
+
+		@media(max-width:900px){
+			.sim-wrapper{grid-template-columns:1fr}
+			.board{width:100%}
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<a class="brand" href="index.html">
+			<img src="imgs/logo1.png" alt="Logo">
+			<span>La Famille Scrabble</span>
+		</a>
+		<nav>
+			<a href="resultats.html">Résultats</a>
+			<a href="classique.html">Classique</a>
+			<a class="button" href="index.html#contact">Nous rejoindre</a>
+		</nav>
+	</header>
+
+	<div class="sim-wrapper">
+		<div class="board-container">
+			<div class="turn-info">Coup <strong id="turn">1</strong> / 10 &nbsp;|&nbsp; Lettres restantes : <strong id="bagCount">100</strong></div>
+			<div class="board" id="board"></div>
+		</div>
+
+		<div class="sidebar">
+			<div class="panel">
+				<h3>Scores</h3>
+				<div class="scores">
+					<div>Vous<br><strong id="scorePlayer">0</strong></div>
+					<div style="text-align:right">Top / IA<br><strong id="scoreTop">0</strong></div>
+				</div>
+			</div>
+
+			<div class="panel">
+				<h3>Votre chevalet</h3>
+				<div class="rack" id="rack"></div>
+			</div>
+
+			<div class="panel">
+				<div class="controls">
+					<button class="btn-play" id="btnPlay">Valider mon coup</button>
+					<button class="btn-secondary" id="btnShowTop">Voir le Top</button>
+					<button class="btn-secondary" id="btnPass">Passer</button>
+					<button class="btn-secondary" id="btnNew">Nouvelle partie</button>
+				</div>
+			</div>
+
+			<div class="panel">
+				<h3>Conseil de l'IA</h3>
+				<div class="advice" id="advice">
+					Placez votre premier mot au centre. L’IA vous donnera des conseils après chaque coup.
+				</div>
+			</div>
+
+			<div class="panel">
+				<h3>Historique</h3>
+				<div class="log" id="log"></div>
+			</div>
+		</div>
+	</div>
+
+	<footer>
+		&copy; 2026 La Famille Scrabble — Simulation de partie Classique
+	</footer>
+
+	<script>
+		const logoBtn = document.getElementById('logoMenuBtn');
+		const logoDropdown = document.getElementById('logoDropdown');
+
+		function toggleLogoMenu(forceClose = false) {
+			const isOpen = forceClose ? false : !logoDropdown.classList.contains('open');
+			logoDropdown.classList.toggle('open', isOpen);
+			logoBtn.setAttribute('aria-expanded', isOpen);
+		}
+
+		logoBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			toggleLogoMenu();
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!logoDropdown.contains(e.target) && !logoBtn.contains(e.target)) {
+				toggleLogoMenu(true);
+			}
+		});
+
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') {
+				toggleLogoMenu(true);
+			}
+		});
+	</script>
+
+	<script>
+		const TILES = {A:9,B:2,C:2,D:3,E:15,F:2,G:2,H:2,I:8,J:1,K:1,L:5,M:3,N:6,O:6,P:2,Q:1,R:6,S:6,T:6,U:6,V:2,W:1,X:1,Y:1,Z:1,'*':2};
+		const POINTS = {A:1,B:3,C:3,D:2,E:1,F:4,G:2,H:4,I:1,J:8,K:10,L:1,M:2,N:1,O:1,P:3,Q:8,R:1,S:1,T:1,U:1,V:4,W:10,X:10,Y:10,Z:10,'*':0};
+
+		const BONUS = [
+			['tw','','','dl','','','','tw','','','','dl','','','tw'],
+			['','dw','','','','tl','','','','tl','','','','dw',''],
+			['','','dw','','','','dl','','dl','','','','dw','',''],
+			['dl','','','dw','','','','dl','','','','dw','','','dl'],
+			['','','','','dw','','','','','','dw','','','',''],
+			['','tl','','','','tl','','','','tl','','','','tl',''],
+			['','','dl','','','','dl','','dl','','','','dl','',''],
+			['tw','','','dl','','','','star','','','','dl','','','tw'],
+			['','','dl','','','','dl','','dl','','','','dl','',''],
+			['','tl','','','','tl','','','','tl','','','','tl',''],
+			['','','','','dw','','','','','','dw','','','',''],
+			['dl','','','dw','','','','dl','','','','dw','','','dl'],
+			['','','dw','','','','dl','','dl','','','','dw','',''],
+			['','dw','','','','tl','','','','tl','','','','dw',''],
+			['tw','','','dl','','','','tw','','','','dl','','','tw']
+		];
+
+		// Exemples de mots possibles pour l'IA (dictionnaire simplifié)
+		const SAMPLE_WORDS = ['SCRABBLE','FAMILLE','JOUER','MOTS','PLATEAU','LETTRE','SCORE','PARTIE','CONSEIL','PROGRESSER','DUPLICATE','CLASSIQUE','CHEVALET','BONUS','DOUBLE','TRIPLE'];
+
+		let bag = [];
+		let board = Array.from({length:15}, () => Array(15).fill(null));
+		let rack = [];
+		let selectedTile = null;
+		let placedThisTurn = [];
+		let scorePlayer = 0;
+		let scoreTop = 0;
+		let turn = 1;
+		const MAX_TURNS = 10;
+
+		function initBag() {
+			bag = [];
+			for (const [letter, count] of Object.entries(TILES)) {
+				for (let i = 0; i < count; i++) bag.push(letter);
+			}
+			bag.sort(() => Math.random() - 0.5);
+		}
+
+		function drawTiles(n) {
+			const drawn = [];
+			for (let i = 0; i < n && bag.length; i++) drawn.push(bag.pop());
+			return drawn;
+		}
+
+		function renderBoard() {
+			const boardEl = document.getElementById('board');
+			boardEl.innerHTML = '';
+			for (let y = 0; y < 15; y++) {
+				for (let x = 0; x < 15; x++) {
+					const cell = document.createElement('div');
+					cell.className = 'cell';
+					const bonus = BONUS[y][x];
+					if (bonus === 'star') { cell.classList.add('star'); cell.textContent = '★'; }
+					else if (bonus) { cell.classList.add(bonus); cell.textContent = bonus.toUpperCase(); }
+					else cell.classList.add('empty');
+
+					if (board[y][x]) {
+						cell.classList.add('occupied');
+						cell.textContent = board[y][x].letter;
+					}
+
+					cell.addEventListener('click', () => onCellClick(x, y));
+					boardEl.appendChild(cell);
+				}
+			}
+			document.getElementById('bagCount').textContent = bag.length;
+			document.getElementById('turn').textContent = turn;
+		}
+
+		function renderRack() {
+			const rackEl = document.getElementById('rack');
+			rackEl.innerHTML = '';
+			rack.forEach((letter, i) => {
+				const tile = document.createElement('div');
+				tile.className = 'tile' + (letter === '*' ? ' blank' : '');
+				tile.innerHTML = (letter === '*' ? '?' : letter) + '<small>' + POINTS[letter] + '</small>';
+				tile.addEventListener('click', () => {
+					selectedTile = selectedTile === i ? null : i;
+					renderRack();
+				});
+				if (selectedTile === i) tile.classList.add('selected');
+				rackEl.appendChild(tile);
+			});
+		}
+
+		function onCellClick(x, y) {
+			if (selectedTile === null || board[y][x]) return;
+			const letter = rack[selectedTile];
+			board[y][x] = { letter: letter === '*' ? 'A' : letter, points: POINTS[letter] };
+			placedThisTurn.push({ x, y, index: selectedTile });
+			rack.splice(selectedTile, 1);
+			selectedTile = null;
+			renderBoard();
+			renderRack();
+		}
+
+		function calculatePlayerScore() {
+			let score = 0;
+			if (placedThisTurn.length === 0) return 0;
+			// Calcul simplifié
+			let base = placedThisTurn.reduce((s, p) => s + board[p.y][p.x].points, 0);
+			let mult = 1;
+			placedThisTurn.forEach(p => {
+				const b = BONUS[p.y][p.x];
+				if (b === 'dl') base += board[p.y][p.x].points;
+				if (b === 'tl') base += board[p.y][p.x].points * 2;
+				if (b === 'dw' || b === 'star') mult *= 2;
+				if (b === 'tw') mult *= 3;
+			});
+			score = base * mult;
+			if (placedThisTurn.length === 7) score += 50;
+			return score;
+		}
+
+		function generateAdvice(playerScore) {
+			const topScore = playerScore + Math.floor(Math.random() * 30) + 10;
+			const tips = [
+				"Essayez de viser les cases bonus (double/triple mot) dès que possible.",
+				"Conservez les lettres à fort potentiel (S, R, E, A) pour les prochains coups.",
+				"Pensez aux mots croisés : un bon placement peut ouvrir plusieurs opportunités.",
+				"Évitez de bloquer le centre trop tôt si vous pouvez faire un mot plus long.",
+				"Le joker est précieux : utilisez-le pour un mot à fort score plutôt que pour un petit mot.",
+				"Regardez les lettres restantes dans le sac pour anticiper les coups de l’adversaire."
+			];
+			const tip = tips[Math.floor(Math.random() * tips.length)];
+			return {
+				topScore,
+				message: `<strong>Top possible : environ ${topScore} points.</strong><br>Vous avez marqué ${playerScore} points.<br><br>${tip}`
+			};
+		}
+
+		function log(msg) {
+			const el = document.getElementById('log');
+			el.innerHTML = '<div>' + msg + '</div>' + el.innerHTML;
+		}
+
+		document.getElementById('btnPlay').addEventListener('click', () => {
+			if (!placedThisTurn.length) return alert('Placez au moins une lettre');
+			const playerScore = calculatePlayerScore();
+			scorePlayer += playerScore;
+			document.getElementById('scorePlayer').textContent = scorePlayer;
+
+			const advice = generateAdvice(playerScore);
+			scoreTop += advice.topScore;
+			document.getElementById('scoreTop').textContent = scoreTop;
+			document.getElementById('advice').innerHTML = advice.message;
+
+			log(`Coup ${turn} — Vous : ${playerScore} pts | Top : ~${advice.topScore} pts`);
+
+			placedThisTurn = [];
+			rack.push(...drawTiles(7 - rack.length));
+			turn++;
+			if (turn > MAX_TURNS || bag.length === 0) {
+				endGame();
+				return;
+			}
+			renderBoard();
+			renderRack();
+		});
+
+		document.getElementById('btnShowTop').addEventListener('click', () => {
+			if (!placedThisTurn.length && turn === 1) {
+				document.getElementById('advice').innerHTML = "<strong>Conseil :</strong> Pour le premier coup, placez un mot long au centre pour maximiser les points et ouvrir le plateau.";
+				return;
+			}
+			const advice = generateAdvice(calculatePlayerScore() || 15);
+			document.getElementById('advice').innerHTML = advice.message;
+		});
+
+		document.getElementById('btnPass').addEventListener('click', () => {
+			placedThisTurn.forEach(p => {
+				rack.push(board[p.y][p.x].letter);
+				board[p.y][p.x] = null;
+			});
+			placedThisTurn = [];
+			log(`Coup ${turn} — Vous passez`);
+			document.getElementById('advice').innerHTML = "<strong>Conseil :</strong> Passer est parfois utile si votre tirage est très mauvais. L’échange est souvent préférable.";
+			turn++;
+			renderBoard();
+			renderRack();
+			if (turn > MAX_TURNS) endGame();
+		});
+
+		function endGame() {
+			const diff = scoreTop - scorePlayer;
+			let finalAdvice = `<strong>Partie terminée !</strong><br>Votre score : ${scorePlayer} — Top : ${scoreTop}<br><br>`;
+			if (diff < 50) finalAdvice += "Excellent ! Vous êtes très proche du Top. Continuez comme ça.";
+			else if (diff < 120) finalAdvice += "Bon résultat. Travaillez les cases bonus et les mots croisés pour gagner encore des points.";
+			else finalAdvice += "Il y a de la marge de progression. Entraînez-vous à repérer les doubles et triples mots, et apprenez des listes de mots rares.";
+			document.getElementById('advice').innerHTML = finalAdvice;
+			log("Partie terminée");
+		}
+
+		document.getElementById('btnNew').addEventListener('click', startGame);
+
+		function startGame() {
+			initBag();
+			board = Array.from({length:15}, () => Array(15).fill(null));
+			rack = drawTiles(7);
+			scorePlayer = 0;
+			scoreTop = 0;
+			turn = 1;
+			placedThisTurn = [];
+			selectedTile = null;
+			document.getElementById('scorePlayer').textContent = '0';
+			document.getElementById('scoreTop').textContent = '0';
+			document.getElementById('log').innerHTML = '';
+			document.getElementById('advice').innerHTML = "Nouvelle partie. Placez votre premier mot au centre. L’IA vous donnera des conseils après chaque coup.";
+			renderBoard();
+			renderRack();
+			log("Nouvelle partie commencée (10 coups)");
+		}
+
+		startGame();
+	</script>
+</body>
+</html>

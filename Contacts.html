@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#090d0b">
+	<title>Contact & Gestion — La Famille Scrabble</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="shortcut icon" href="logo1.png" type="image/svg+xml">
+	<style>
+		:root{color-scheme:dark;--bg:#090d0b;--panel:#111915;--panel-soft:#15201a;--green:#a4f36b;--muted:#a1aaa3;--line:rgba(255,255,255,.1);--danger:#ff6b6b}
+		*{box-sizing:border-box}
+		html{scroll-behavior:smooth}
+		body{margin:0;background:var(--bg);color:#f4f7f3;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+		a{color:inherit;text-decoration:none}
+		.glow{position:absolute;z-index:-1;pointer-events:none;width:460px;height:460px;border-radius:50%;filter:blur(180px);opacity:.16;background:#55e58b;top:80px;left:45%}
+
+		/* Header & Menu Logo Animé */
+		header{position:relative;z-index:50;width:min(1160px,calc(100% - 48px));height:88px;margin:auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+		.brand-wrapper{position:relative}
+		.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.03em;background:none;border:none;color:inherit;font-family:inherit;font-size:16px;padding:6px 10px 6px 0;cursor:pointer;border-radius:14px;transition:transform .2s}
+		.brand:hover{transform:translateY(-1px)}
+		.brand img{width:48px;height:48px;object-fit:contain;border-radius:12px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+		.brand[aria-expanded="true"] img{transform:rotate(-8deg) scale(1.06)}
+		.brand-chevron{font-size:12px;color:var(--green);margin-left:2px;transition:transform .3s ease}
+		.brand[aria-expanded="true"] .brand-chevron{transform:rotate(180deg)}
+
+		.logo-menu{position:absolute;top:calc(100% + 14px);left:0;width:310px;max-height:420px;overflow-y:auto;background:rgba(17,25,21,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(164,243,107,.25);border-radius:20px;padding:12px;box-shadow:0 24px 60px rgba(0,0,0,.75),0 0 40px rgba(164,243,107,.08);opacity:0;visibility:hidden;transform:translateY(-12px) scale(.96);transform-origin:top left;transition:opacity .28s ease,transform .32s cubic-bezier(.16,1,.3,1),visibility .28s}
+		.logo-menu.open{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+		.logo-menu-header{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--green);padding:6px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:8px}
+		.logo-menu-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+		.logo-menu-item{opacity:0;transform:translateX(-10px);transition:opacity .25s ease,transform .25s ease}
+		.logo-menu.open .logo-menu-item{opacity:1;transform:translateX(0)}
+		.logo-menu.open .logo-menu-item:nth-child(1){transition-delay:.03s}
+		.logo-menu.open .logo-menu-item:nth-child(2){transition-delay:.06s}
+		.logo-menu.open .logo-menu-item:nth-child(3){transition-delay:.09s}
+		.logo-menu.open .logo-menu-item:nth-child(4){transition-delay:.12s}
+		.logo-menu.open .logo-menu-item:nth-child(5){transition-delay:.15s}
+		.logo-menu.open .logo-menu-item:nth-child(6){transition-delay:.18s}
+		.logo-menu.open .logo-menu-item:nth-child(7){transition-delay:.21s}
+		.logo-menu.open .logo-menu-item:nth-child(8){transition-delay:.24s}
+
+		.logo-menu-link{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:12px;transition:background .2s,transform .2s}
+		.logo-menu-link:hover{background:rgba(164,243,107,.12);transform:translateX(4px)}
+		.logo-menu-link.active{background:rgba(164,243,107,.08);border:1px solid rgba(164,243,107,.2)}
+		.menu-icon{width:30px;height:30px;border-radius:8px;background:#1a261c;color:var(--green);display:grid;place-items:center;font-size:13px;flex-shrink:0;transition:background .2s,color .2s}
+		.logo-menu-link:hover .menu-icon{background:var(--green);color:#10200f}
+		.menu-text{display:flex;flex-direction:column}
+		.menu-title{font-weight:700;font-size:13.5px;color:#f4f7f3}
+		.menu-desc{font-size:11.5px;color:var(--muted)}
+
+		nav{display:flex;align-items:center;gap:32px;color:#c1c9c2;font-size:14px}
+		nav a:not(.button):hover{color:var(--green)}
+
+		/* Boutons */
+		.button{display:inline-flex;align-items:center;justify-content:center;gap:9px;border:none;border-radius:999px;padding:13px 22px;background:var(--green);color:#10200f;font-family:inherit;font-weight:750;font-size:14px;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s}
+		.button:hover,.button:focus,.button:active,nav a.button:hover,nav a.button:focus,nav a.button:active{color:#10200f;transform:translateY(-2px);box-shadow:0 10px 32px #a4f36b38}
+		.button.secondary{color:#f4f7f3;background:transparent;border:1px solid var(--line)}
+		.button.secondary:hover,.button.secondary:focus,.button.secondary:active{color:#f4f7f3;border-color:var(--green);box-shadow:none}
+
+		/* En-tête de page */
+		.page-hero{width:min(1160px,calc(100% - 48px));margin:auto;padding:56px 0 40px}
+		.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--green);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+		.dot{width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 16px var(--green)}
+		h1{max-width:740px;margin:18px 0 16px;font-size:clamp(38px,5.5vw,64px);line-height:1.02;letter-spacing:-.06em}
+		h1 span{color:var(--green)}
+		.intro{max-width:600px;color:var(--muted);font-size:16px;line-height:1.75;margin:0}
+
+		/* Grille Contact (Formulaire + Infos) */
+		.contact-grid{width:min(1160px,calc(100% - 48px));margin:0 auto 72px;display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:start}
+		.card{background:var(--panel);border:1px solid var(--line);border-radius:24px;padding:32px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+		.card h2{margin:0 0 8px;font-size:24px;letter-spacing:-.04em}
+		.card-sub{margin:0 0 24px;color:var(--muted);font-size:14px;line-height:1.6}
+
+		.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+		.form-group{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+		label{font-size:13px;font-weight:600;color:#d6ddd7}
+		input,select,textarea{width:100%;background:#0c120f;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:#f4f7f3;font-family:inherit;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+		input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(164,243,107,.12)}
+		textarea{min-height:110px;resize:vertical}
+
+		.toast{display:none;align-items:center;gap:10px;margin-top:16px;padding:12px 16px;border-radius:12px;background:rgba(164,243,107,.12);border:1px solid rgba(164,243,107,.35);color:var(--green);font-size:14px;font-weight:600}
+		.toast.show{display:flex}
+
+		/* Infos pratiques */
+		.info-stack{display:flex;flex-direction:column;gap:16px}
+		.info-card{display:flex;align-items:flex-start;gap:14px;padding:18px;border-radius:16px;background:#0d1410;border:1px solid var(--line);transition:border-color .2s}
+		.info-card:hover{border-color:rgba(164,243,107,.35)}
+		.info-icon{width:42px;height:42px;border-radius:12px;background:#1a261c;color:var(--green);display:grid;place-items:center;font-size:17px;flex-shrink:0}
+		.info-content strong{display:block;font-size:15px;margin-bottom:4px}
+		.info-content span,.info-content a{color:var(--muted);font-size:14px;line-height:1.5}
+		.info-content a:hover{color:var(--green)}
+
+		/* Section Gestion des Contacts */
+		.manager-section{width:min(1160px,calc(100% - 48px));margin:0 auto 90px}
+		.manager-header{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:20px;margin-bottom:24px}
+		.manager-header h2{margin:10px 0 0;font-size:clamp(26px,3.5vw,38px);letter-spacing:-.05em}
+		.manager-stats{display:flex;gap:12px;flex-wrap:wrap}
+		.pill-stat{padding:8px 14px;border-radius:999px;background:var(--panel);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+		.pill-stat strong{color:var(--green);margin-right:4px}
+
+		.toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+		.search-box{position:relative;flex:1;min-width:220px}
+		.search-box i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px}
+		.search-box input{padding-left:38px}
+		.filter-select{width:auto;min-width:170px}
+
+		.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:18px;background:#0c120f}
+		table{width:100%;border-collapse:collapse;text-align:left;font-size:14px}
+		th{padding:14px 18px;color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--line);background:#101713}
+		td{padding:15px 18px;border-bottom:1px solid var(--line);vertical-align:middle}
+		tr:last-child td{border-bottom:none}
+		tr:hover td{background:rgba(255,255,255,.02)}
+
+		.member-cell{display:flex;align-items:center;gap:12px}
+		.avatar{width:36px;height:36px;border-radius:10px;background:#1a261c;color:var(--green);font-weight:800;font-size:13px;display:grid;place-items:center;flex-shrink:0}
+		.member-name{font-weight:700;display:block}
+		.member-note{font-size:12px;color:var(--muted)}
+
+		.badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700}
+		.badge.membre{background:rgba(164,243,107,.14);color:var(--green);border:1px solid rgba(164,243,107,.3)}
+		.badge.nouveau{background:rgba(96,165,250,.14);color:#7cc0ff;border:1px solid rgba(96,165,250,.3)}
+		.badge.partenaire{background:rgba(251,191,36,.14);color:#fcd34d;border:1px solid rgba(251,191,36,.3)}
+
+		.row-actions{display:flex;gap:8px}
+		.icon-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:#d6ddd7;display:grid;place-items:center;cursor:pointer;transition:all .2s}
+		.icon-btn:hover{border-color:var(--green);color:var(--green)}
+		.icon-btn.delete:hover{border-color:var(--danger);color:var(--danger)}
+
+		.empty-state{text-align:center;padding:36px 20px;color:var(--muted);font-size:14px}
+
+		/* Footer */
+		footer{border-top:1px solid var(--line);margin-top:40px;background:#0c100e}
+		.footer-top{padding:50px 24px 30px}
+		.container{width:min(1160px,calc(100% - 48px));margin:auto}
+		.footer-list{list-style:none;padding:0;margin:0}
+		.footer-list-title{font-weight:700;font-size:18px;margin-bottom:16px;color:#fff}
+		.footer-item{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+		.contact-icon{width:36px;height:36px;display:grid;place-items:center;background:#1a261c;border-radius:10px;flex-shrink:0}
+		.contact-icon i{color:var(--green);font-size:16px}
+		.contact-link{color:var(--muted);font-size:15px;transition:color .2s}
+		.contact-link:hover{color:var(--green)}
+		.footer-list:last-child{margin-top:8px}
+		.footer-list:last-child span{color:var(--muted);font-size:15px;line-height:1.6}
+		.footer-bottom{border-top:1px solid var(--line);padding:20px 24px}
+		.footer-bottom .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+		.copyright{margin:0;color:#818a82;font-size:13px}
+		.copyright-link{color:var(--green)}
+		.footer-bottom-list{display:flex;gap:20px;list-style:none;padding:0;margin:0}
+		.footer-bottom-link{color:#818a82;font-size:13px}
+		.footer-bottom-link:hover{color:var(--green)}
+
+		@media(max-width:860px){
+			.contact-grid{grid-template-columns:1fr}
+		}
+		@media(max-width:760px){
+			header{height:74px}nav{gap:16px}nav a:not(.button){display:none}
+			.logo-menu{width:min(310px,calc(100vw - 48px))}
+			.form-row{grid-template-columns:1fr}
+			.card{padding:22px}
+			.footer-bottom .container{flex-direction:column;text-align:center}
+			.footer-bottom-list{justify-content:center}
+		}
+		@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+	</style>
+</head>
+<body>
+	<div class="glow" aria-hidden="true"></div>
+	<header>
+		<div class="brand-wrapper">
+			<button type="button" class="brand" id="logoMenuBtn" aria-expanded="false" aria-controls="logoDropdown" aria-label="Ouvrir le menu des pages La Famille Scrabble">
+				<img src="logo1.png" alt="Logo La Famille Scrabble">
+				<span>La Famille Scrabble</span>
+				<i class="fa-solid fa-chevron-down brand-chevron" aria-hidden="true"></i>
+			</button>
+
+			<!-- Menu animé au clic sur le logo -->
+			<div class="logo-menu" id="logoDropdown" role="menu">
+				<div class="logo-menu-header">Toutes les pages du site</div>
+				<ul class="logo-menu-list">
+					<li class="logo-menu-item">
+						<a href="Accueil.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-house"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Accueil</span>
+								<span class="menu-desc">Présentation générale</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="actualites.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-newspaper"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Actualités & Activités</span>
+								<span class="menu-desc">Dernières nouvelles du club</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="classique.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-chess-board"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Scrabble Classique</span>
+								<span class="menu-desc">Règles, tournois et classements</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="jeunes.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-child-reaching"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Section Jeunes</span>
+								<span class="menu-desc">Initiation et catégories scolaires</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="jeux-listes.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-book-open"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Jeux & Listes</span>
+								<span class="menu-desc">Vocabulaire et outils d'entraînement</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="resultats.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-trophy"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Résultats</span>
+								<span class="menu-desc">Compétitions et tournois du club</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="simulation.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-robot"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Simulation de partie</span>
+								<span class="menu-desc">S'entraîner contre l'IA</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="Contacts.html" class="logo-menu-link active" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-paper-plane"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Nous rejoindre & Contacts</span>
+								<span class="menu-desc">Adhésion et formulaire</span>
+							</div>
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<nav aria-label="Navigation principale">
+			<a href="Accueil.html">Accueil</a>
+			<a href="actualites.html">Le club</a>
+		</nav>
+	</header>
+
+	<main>
+		<section class="page-hero">
+			<div class="eyebrow"><span class="dot"></span> Contact & Répertoire du club</div>
+			<h1>Prenons place <span>autour du plateau.</span></h1>
+			<p class="intro">Vous souhaitez rejoindre le club, participer à une séance découverte ou enregistrer un nouveau contact dans l'annuaire de La Famille Scrabble ? Tout se gère ici.</p>
+		</section>
+
+		<!-- Formulaire & Coordonnées -->
+		<section class="contact-grid" id="formulaire-contact">
+			<div class="card">
+				<h2>Envoyer un message / Ajouter un contact</h2>
+				<p class="card-sub">Remplissez ce formulaire pour nous écrire. Votre demande sera automatiquement ajoutée au gestionnaire de contacts ci-dessous.</p>
+
+				<form id="contactForm">
+					<div class="form-row">
+						<div class="form-group">
+							<label for="fullName">Nom complet *</label>
+							<input type="text" id="fullName" placeholder="Ex. Koffi Mensah" required>
+						</div>
+						<div class="form-group">
+							<label for="phone">Téléphone *</label>
+							<input type="tel" id="phone" placeholder="Ex. +229 01 97 00 00 00" required>
+						</div>
+					</div>
+
+					<div class="form-row">
+						<div class="form-group">
+							<label for="email">Adresse e-mail</label>
+							<input type="email" id="email" placeholder="Ex. joueur@exemple.com">
+						</div>
+						<div class="form-group">
+							<label for="category">Catégorie / Motif</label>
+							<select id="category">
+								<option value="nouveau">Nouveau joueur / Adhésion</option>
+								<option value="membre">Membre actif du club</option>
+								<option value="partenaire">Partenaire / Tournoi</option>
+							</select>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="message">Message ou note (niveau, disponibilité…)</label>
+						<textarea id="message" placeholder="Bonjour, je souhaite venir essayer une partie samedi prochain..."></textarea>
+					</div>
+
+					<button type="submit" class="button">
+						<i class="fa-solid fa-paper-plane"></i> Enregistrer & Envoyer
+					</button>
+
+					<div class="toast" id="formToast" role="status">
+						<i class="fa-solid fa-circle-check"></i>
+						<span>Contact enregistré et message transmis au club !</span>
+					</div>
+				</form>
+			</div>
+
+			<div class="card">
+				<h2>Infos pratiques</h2>
+				<p class="card-sub">Retrouvez-nous directement lors de nos rencontres hebdomadaires ou contactez le bureau.</p>
+
+				<div class="info-stack">
+					<div class="info-card">
+						<div class="info-icon"><i class="fa-solid fa-location-dot"></i></div>
+						<div class="info-content">
+							<strong>Siège du club</strong>
+							<a href="https://maps.app.goo.gl/TYZu6ZLYxySuh7oLA" target="_blank" rel="noopener noreferrer">Bazounkpa C/S TCHIAKPE GEVRON ↗</a>
+						</div>
+					</div>
+
+					<div class="info-card">
+						<div class="info-icon"><i class="fa-solid fa-phone"></i></div>
+						<div class="info-content">
+							<strong>Téléphone & WhatsApp</strong>
+							<a href="tel:+2290196801614">+229 01 96 80 16 14</a>
+						</div>
+					</div>
+
+					<div class="info-card">
+						<div class="info-icon"><i class="fa-solid fa-envelope"></i></div>
+						<div class="info-content">
+							<strong>E-mail officiel</strong>
+							<a href="mailto:lafasc01@gmail.com">lafasc01@gmail.com</a>
+						</div>
+					</div>
+
+					<div class="info-card">
+						<div class="info-icon"><i class="fa-solid fa-clock"></i></div>
+						<div class="info-content">
+							<strong>Séances de jeu</strong>
+							<span>Mercredi : 16h00 – 19h00<br>Samedi : 14h30 – 18h30</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- Gestionnaire de contacts -->
+		<section class="manager-section" id="gestion-contacts">
+			<div class="manager-header">
+				<div>
+					<div class="eyebrow"><span class="dot"></span> Administration & Suivi</div>
+					<h2>Gestion des contacts</h2>
+				</div>
+				<div class="manager-stats" id="statsBar"></div>
+			</div>
+
+			<div class="card">
+				<div class="toolbar">
+					<div class="search-box">
+						<i class="fa-solid fa-magnifying-glass"></i>
+						<input type="text" id="searchInput" placeholder="Rechercher un nom, numéro, e-mail ou note...">
+					</div>
+					<select id="statusFilter" class="filter-select" aria-label="Filtrer par catégorie">
+						<option value="all">Toutes les catégories</option>
+						<option value="nouveau">Nouveaux joueurs</option>
+						<option value="membre">Membres actifs</option>
+						<option value="partenaire">Partenaires</option>
+					</select>
+					<button type="button" class="button secondary" id="exportBtn">
+						<i class="fa-solid fa-download"></i> Exporter CSV
+					</button>
+				</div>
+
+				<div class="table-wrap">
+					<table>
+						<thead>
+							<tr>
+								<th>Contact</th>
+								<th>Coordonnées</th>
+								<th>Statut</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody id="contactsTableBody"></tbody>
+					</table>
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<footer id="contact">
+		<div class="footer-top">
+			<div class="container">
+				<ul class="footer-list">
+					<li><p class="footer-list-title">Contact</p></li>
+					<li class="footer-item">
+						<div class="contact-icon"><i class="fa-solid fa-location-dot"></i></div>
+						<a class="contact-link" href="https://maps.app.goo.gl/TYZu6ZLYxySuh7oLA" target="_blank" rel="noopener noreferrer">Bazounkpa C/S TCHIAKPE GEVRON</a>
+					</li>
+					<li class="footer-item">
+						<div class="contact-icon"><i class="fa-solid fa-phone"></i></div>
+						<a href="tel:+2290196801614" class="contact-link">+229 01 96 80 16 14</a>
+					</li>
+					<li class="footer-item">
+						<div class="contact-icon"><i class="fa-solid fa-envelope"></i></div>
+						<a href="mailto:lafasc01@gmail.com" class="contact-link">lafasc01@gmail.com</a>
+					</li>
+				</ul>
+				<div class="footer-list">
+					<p class="footer-list-title">La Famille Scrabble</p>
+					<span>Le plaisir des mots, ensemble.</span>
+				</div>
+			</div>
+		</div>
+		<div class="footer-bottom">
+			<div class="container">
+				<p class="copyright">&copy; 2026 <a href="Accueil.html" class="copyright-link">La Famille Scrabble</a>. Tous droits réservés.</p>
+				<ul class="footer-bottom-list">
+					<li><a href="#" class="footer-bottom-link">Mentions légales</a></li>
+					<li><a href="#" class="footer-bottom-link">Politique de confidentialité</a></li>
+				</ul>
+			</div>
+		</div>
+	</footer>
+
+	<script>
+		/* 1. Menu animé du logo */
+		const logoBtn = document.getElementById('logoMenuBtn');
+		const logoDropdown = document.getElementById('logoDropdown');
+
+		function toggleLogoMenu(forceClose = false) {
+			const isOpen = forceClose ? false : !logoDropdown.classList.contains('open');
+			logoDropdown.classList.toggle('open', isOpen);
+			logoBtn.setAttribute('aria-expanded', isOpen);
+		}
+
+		logoBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			toggleLogoMenu();
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!logoDropdown.contains(e.target) && !logoBtn.contains(e.target)) {
+				toggleLogoMenu(true);
+			}
+		});
+
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') toggleLogoMenu(true);
+		});
+
+		/* 2. Gestionnaire de contacts (avec sauvegarde locale) */
+		const STORAGE_KEY = 'lfs_contacts_v1';
+		const defaultContacts = [
+			{
+				id: 1,
+				name: 'Bureau La Famille Scrabble',
+				phone: '+229 01 96 80 16 14',
+				email: 'lafasc01@gmail.com',
+				category: 'membre',
+				note: 'Coordination générale & accueil des membres'
+			},
+			{
+				id: 2,
+				name: 'Amina Dossou',
+				phone: '+229 01 95 42 18 09',
+				email: 'amina.dossou@exemple.bj',
+				category: 'nouveau',
+				note: 'Souhaite rejoindre les séances du samedi'
+			},
+			{
+				id: 3,
+				name: 'Jean-Baptiste Agbo',
+				phone: '+229 01 91 30 77 54',
+				email: 'jb.agbo@exemple.bj',
+				category: 'partenaire',
+				note: 'Organisation tournoi inter-clubs'
+			}
+		];
+
+		let contacts = JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultContacts;
+
+		const tableBody = document.getElementById('contactsTableBody');
+		const statsBar = document.getElementById('statsBar');
+		const searchInput = document.getElementById('searchInput');
+		const statusFilter = document.getElementById('statusFilter');
+		const contactForm = document.getElementById('contactForm');
+		const formToast = document.getElementById('formToast');
+
+		const categoryLabels = {
+			nouveau: 'Nouveau joueur',
+			membre: 'Membre actif',
+			partenaire: 'Partenaire'
+		};
+
+		function saveContacts() {
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
+		}
+
+		function getInitials(name) {
+			return name.trim().split(/\s+/).slice(0, 2).map(n => n[0]?.toUpperCase() || '').join('');
+		}
+
+		function renderStats() {
+			const total = contacts.length;
+			const membres = contacts.filter(c => c.category === 'membre').length;
+			const nouveaux = contacts.filter(c => c.category === 'nouveau').length;
+			statsBar.innerHTML = `
+				<span class="pill-stat"><strong>${total}</strong>Total</span>
+				<span class="pill-stat"><strong>${membres}</strong>Membres</span>
+				<span class="pill-stat"><strong>${nouveaux}</strong>Demandes</span>
+			`;
+		}
+
+		function renderContacts() {
+			const query = searchInput.value.toLowerCase().trim();
+			const filter = statusFilter.value;
+
+			const filtered = contacts.filter(c => {
+				const matchesFilter = filter === 'all' || c.category === filter;
+				const matchesQuery = !query || [c.name, c.phone, c.email, c.note].some(val => (val || '').toLowerCase().includes(query));
+				return matchesFilter && matchesQuery;
+			});
+
+			renderStats();
+
+			if (filtered.length === 0) {
+				tableBody.innerHTML = `<tr><td colspan="4" class="empty-state">Aucun contact ne correspond à votre recherche.</td></tr>`;
+				return;
+			}
+
+			tableBody.innerHTML = filtered.map(c => `
+				<tr>
+					<td>
+						<div class="member-cell">
+							<div class="avatar">${getInitials(c.name)}</div>
+							<div>
+								<span class="member-name">${escapeHtml(c.name)}</span>
+								<span class="member-note">${escapeHtml(c.note || 'Aucune note')}</span>
+							</div>
+						</div>
+					</td>
+					<td>
+						<div><a href="tel:${escapeHtml(c.phone)}">${escapeHtml(c.phone)}</a></div>
+						${c.email ? `<div class="member-note"><a href="mailto:${escapeHtml(c.email)}">${escapeHtml(c.email)}</a></div>` : ''}
+					</td>
+					<td>
+						<span class="badge ${c.category}">${categoryLabels[c.category] || c.category}</span>
+					</td>
+					<td>
+						<div class="row-actions">
+							<button type="button" class="icon-btn" title="Changer le statut" onclick="cycleStatus(${c.id})">
+								<i class="fa-solid fa-rotate"></i>
+							</button>
+							<button type="button" class="icon-btn" title="Copier le numéro" onclick="copyPhone('${escapeHtml(c.phone)}', this)">
+								<i class="fa-regular fa-copy"></i>
+							</button>
+							<button type="button" class="icon-btn delete" title="Supprimer le contact" onclick="deleteContact(${c.id})">
+								<i class="fa-solid fa-trash"></i>
+							</button>
+						</div>
+					</td>
+				</tr>
+			`).join('');
+		}
+
+		function escapeHtml(str) {
+			return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+		}
+
+		contactForm.addEventListener('submit', (e) => {
+			e.preventDefault();
+			const newContact = {
+				id: Date.now(),
+				name: document.getElementById('fullName').value.trim(),
+				phone: document.getElementById('phone').value.trim(),
+				email: document.getElementById('email').value.trim(),
+				category: document.getElementById('category').value,
+				note: document.getElementById('message').value.trim()
+			};
+
+			contacts.unshift(newContact);
+			saveContacts();
+			renderContacts();
+			contactForm.reset();
+
+			formToast.classList.add('show');
+			setTimeout(() => formToast.classList.remove('show'), 4000);
+		});
+
+		window.cycleStatus = function(id) {
+			const order = ['nouveau', 'membre', 'partenaire'];
+			contacts = contacts.map(c => {
+				if (c.id === id) {
+					const next = order[(order.indexOf(c.category) + 1) % order.length];
+					return { ...c, category: next };
+				}
+				return c;
+			});
+			saveContacts();
+			renderContacts();
+		};
+
+		window.copyPhone = function(phone, btn) {
+			navigator.clipboard?.writeText(phone);
+			const icon = btn.querySelector('i');
+			icon.className = 'fa-solid fa-check';
+			setTimeout(() => icon.className = 'fa-regular fa-copy', 1500);
+		};
+
+		window.deleteContact = function(id) {
+			contacts = contacts.filter(c => c.id !== id);
+			saveContacts();
+			renderContacts();
+		};
+
+		document.getElementById('exportBtn').addEventListener('click', () => {
+			const rows = [['Nom', 'Téléphone', 'Email', 'Catégorie', 'Note']];
+			contacts.forEach(c => rows.push([c.name, c.phone, c.email, categoryLabels[c.category], c.note]));
+			const csv = rows.map(r => r.map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(';')).join('\n');
+			const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = 'contacts-famille-scrabble.csv';
+			a.click();
+			URL.revokeObjectURL(url);
+		});
+
+		searchInput.addEventListener('input', renderContacts);
+		statusFilter.addEventListener('change', renderContacts);
+
+		renderContacts();
+	</script>
+</body>
+</html>

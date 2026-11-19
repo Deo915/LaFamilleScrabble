@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#090d0b">
+	<title>Jeux & Listes — La Famille Scrabble</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="shortcut icon" href="logo1.png" type="image/svg+xml">
+	<style>
+		:root{color-scheme:dark;--bg:#090d0b;--panel:#111915;--green:#a4f36b;--muted:#a1aaa3;--line:rgba(255,255,255,.1)}
+		*{box-sizing:border-box}
+		html{scroll-behavior:smooth}
+		body{margin:0;background:var(--bg);color:#f4f7f3;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+		a{color:inherit;text-decoration:none}
+		.glow{position:absolute;z-index:-1;pointer-events:none;width:460px;height:460px;border-radius:50%;filter:blur(180px);opacity:.16;background:#55e58b;top:80px;left:45%}
+		header{width:min(1160px,calc(100% - 48px));height:88px;margin:auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:relative;z-index:50}
+		
+		/* Conteneur du logo et menu déroulant */
+		.brand-wrapper{position:relative}
+		.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.03em;background:none;border:none;color:inherit;font-family:inherit;font-size:16px;cursor:pointer;padding:6px 10px 6px 0;border-radius:14px;transition:transform .2s}
+		.brand:hover{transform:translateY(-1px)}
+		.brand img{width:48px;height:48px;object-fit:contain;border-radius:12px;transition:transform .25s ease}
+		.brand:hover img{transform:scale(1.05)}
+		.brand .chevron{font-size:12px;color:var(--green);transition:transform .3s cubic-bezier(0.16, 1, 0.3, 1);margin-left:2px}
+		.brand[aria-expanded="true"] .chevron{transform:rotate(180deg)}
+
+		/* Menu animé */
+		.logo-dropdown{
+			position:absolute;
+			top:calc(100% + 12px);
+			left:0;
+			min-width:310px;
+			max-height:420px;
+			overflow-y:auto;
+			background:rgba(17, 25, 21, 0.96);
+			backdrop-filter:blur(14px);
+			-webkit-backdrop-filter:blur(14px);
+			border:1px solid rgba(164, 243, 107, 0.25);
+			border-radius:20px;
+			padding:12px;
+			box-shadow:0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(164, 243, 107, 0.08);
+			opacity:0;
+			visibility:hidden;
+			transform:translateY(-12px) scale(0.96);
+			transform-origin:top left;
+			transition:opacity .28s cubic-bezier(0.16, 1, 0.3, 1), transform .28s cubic-bezier(0.16, 1, 0.3, 1), visibility .28s;
+			z-index:100;
+		}
+		.logo-dropdown.open{
+			opacity:1;
+			visibility:visible;
+			transform:translateY(0) scale(1);
+		}
+		.dropdown-title{
+			font-size:11px;
+			font-weight:800;
+			text-transform:uppercase;
+			letter-spacing:.12em;
+			color:var(--green);
+			padding:6px 12px 10px;
+			border-bottom:1px solid var(--line);
+			margin-bottom:8px;
+		}
+		.dropdown-link{
+			display:flex;
+			align-items:center;
+			gap:12px;
+			padding:8px 12px;
+			border-radius:12px;
+			font-size:13.5px;
+			font-weight:600;
+			color:#e4ebe5;
+			transition:background .2s, color .2s, transform .2s;
+		}
+		.dropdown-link i{
+			width:30px;
+			height:30px;
+			border-radius:8px;
+			background:#1a261c;
+			color:var(--green);
+			display:grid;
+			place-items:center;
+			font-size:13px;
+			flex-shrink:0;
+		}
+		.dropdown-link:hover{
+			background:rgba(164, 243, 107, 0.14);
+			color:var(--green);
+			transform:translateX(4px);
+		}
+		.dropdown-link.active{
+			background:rgba(164, 243, 107, 0.08);
+			color:var(--green);
+			border:1px solid rgba(164, 243, 107, 0.2);
+		}
+
+		nav{display:flex;align-items:center;gap:32px;color:#c1c9c2;font-size:14px}
+		nav a:not(.button):hover{color:var(--green)}
+		.button{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:999px;padding:13px 20px;background:var(--green);color:#10200f;font-weight:750;font-size:14px;transition:transform .2s,box-shadow .2s}
+		.button:hover{transform:translateY(-3px);box-shadow:0 10px 32px #a4f36b38}
+
+		.page-header{width:min(1160px,calc(100% - 48px));margin:auto;padding:60px 0 30px}
+		.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--green);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+		.dot{width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 16px var(--green)}
+		h1{margin:18px 0 12px;font-size:clamp(40px,6vw,64px);line-height:1;letter-spacing:-.06em}
+		h1 span{color:var(--green)}
+		.lead{max-width:700px;color:var(--muted);font-size:17px;line-height:1.7}
+
+		.content{width:min(1160px,calc(100% - 48px));margin:0 auto 80px}
+		.section-title{font-size:26px;letter-spacing:-.04em;margin:48px 0 16px;color:var(--green)}
+		.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+		.card{padding:26px;background:#ffffff04;border:1px solid var(--line);border-radius:20px;transition:border-color .2s}
+		.card:hover{border-color:#a4f36b40}
+		.card h3{margin:0 0 10px;font-size:19px;letter-spacing:-.03em}
+		.card p{margin:0 0 12px;color:var(--muted);line-height:1.7;font-size:14.5px}
+		.card a{color:var(--green);font-weight:700;font-size:14px}
+		.card a:hover{text-decoration:underline}
+		.card ul{margin:10px 0 0;padding-left:18px;color:var(--muted);font-size:14.5px;line-height:1.7}
+
+		.list-group{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+		.list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:#ffffff04;border:1px solid var(--line);border-radius:12px}
+		.list-item a{color:var(--green);font-weight:600}
+
+		footer{border-top:1px solid var(--line);margin-top:40px;background:#0c100e}
+		.footer-top{padding:50px 24px 30px}
+		.container{width:min(1160px,calc(100% - 48px));margin:auto}
+		.footer-list{list-style:none;padding:0;margin:0}
+		.footer-list-title{font-weight:700;font-size:18px;margin-bottom:16px;color:#fff}
+		.footer-item{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+		.contact-icon{width:36px;height:36px;display:grid;place-items:center;background:#1a261c;border-radius:10px;flex-shrink:0}
+		.contact-icon img{width:20px;height:20px;object-fit:contain}
+		.contact-icon i{color:var(--green);font-size:16px}
+		.contact-link{color:var(--muted);font-size:15px;transition:color .2s}
+		.contact-link:hover{color:var(--green)}
+		.footer-bottom{border-top:1px solid var(--line);padding:20px 24px}
+		.footer-bottom .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+		.copyright{margin:0;color:#818a82;font-size:13px}
+		.copyright-link{color:var(--green)}
+		.footer-bottom-list{display:flex;gap:20px;list-style:none;padding:0;margin:0}
+		.footer-bottom-link{color:#818a82;font-size:13px}
+		.footer-bottom-link:hover{color:var(--green)}
+
+		@media(max-width:760px){
+			header{height:74px}nav{gap:16px}nav a:not(.button){display:none}
+			.page-header{padding:40px 0 20px;text-align:center}
+			.lead{margin:auto}
+			.list-item{flex-direction:column;align-items:flex-start;gap:6px}
+			.footer-bottom .container{flex-direction:column;text-align:center}
+			.footer-bottom-list{justify-content:center}
+		}
+		@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+	</style>
+</head>
+<body>
+	<div class="glow" aria-hidden="true"></div>
+	<header>
+		<div class="brand-wrapper">
+			<button type="button" class="brand" id="logoMenuBtn" aria-expanded="false" aria-controls="logoDropdown" aria-label="Ouvrir le menu de navigation">
+				<img src="logo1.png" alt="Logo La Famille Scrabble">
+				<span>La Famille Scrabble</span>
+				<i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+			</button>
+
+			<div class="logo-dropdown" id="logoDropdown" role="menu">
+				<div class="dropdown-title">Toutes les pages du site</div>
+				<a href="Accueil.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-house"></i>
+					<span>Accueil</span>
+				</a>
+				<a href="actualites.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-newspaper"></i>
+					<span>Actualités & Activités</span>
+				</a>
+				<a href="classique.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-chess-board"></i>
+					<span>Scrabble Classique</span>
+				</a>
+				<a href="jeunes.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-child-reaching"></i>
+					<span>Section Jeunes</span>
+				</a>
+				<a href="jeux-listes.html" class="dropdown-link active" role="menuitem">
+					<i class="fa-solid fa-book-open"></i>
+					<span>Jeux & Listes</span>
+				</a>
+				<a href="resultats.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-trophy"></i>
+					<span>Résultats</span>
+				</a>
+				<a href="simulation.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-robot"></i>
+					<span>Simulation de partie</span>
+				</a>
+				<a href="Contacts.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-paper-plane"></i>
+					<span>Nous rejoindre & Contacts</span>
+				</a>
+			</div>
+		</div>
+
+		<nav aria-label="Navigation principale">
+			<a href="actualites.html">Actualités</a>
+			<a href="resultats.html">Résultats</a>
+			<a href="simulation.html">Simulation</a>
+			<a class="button" href="Contacts.html">Nous rejoindre</a>
+		</nav>
+	</header>
+
+	<main>
+		<section class="page-header">
+			<div class="eyebrow"><span class="dot"></span> Entraînement</div>
+			<h1>Jeux & <span>Listes</span></h1>
+			<p class="lead">Ressources pour progresser : listes de vocabulaire, mini-jeux, nouveautés ODS et outils d’entraînement. Inspiré des ressources du Comité Dauphiné-Savoie.</p>
+		</section>
+
+		<div class="content">
+			<!-- ===== MODIFIEZ LES OUTILS D'ENTRAÎNEMENT ICI ===== -->
+			<h2 class="section-title">Outils d’entraînement</h2>
+			<div class="grid">
+				<div class="card">
+					<h3>Mini grilles</h3>
+					<p>Reconstituez des grilles parfaites de 4×4, 5×5 ou 6×6. Échangez les lettres jusqu’à obtenir les mots corrects.</p>
+					<a href="https://www.scrabblecrds.fr/index.php?PG=7" target="_blank">Accéder aux mini grilles →</a>
+				</div>
+				<div class="card">
+					<h3>Monômes & Binômes</h3>
+					<p>Entraînez-vous sur les anagrammes de 6 à 9 lettres. Idéal pour mémoriser les mots rares.</p>
+					<a href="https://www.scrabblecrds.fr/index.php?PG=7" target="_blank">S’entraîner →</a>
+				</div>
+				<div class="card">
+					<h3>Escalettres</h3>
+					<p>Grilles progressives où chaque mot s’appuie sur le précédent. Excellent pour le vocabulaire.</p>
+					<a href="https://www.scrabblecrds.fr/index.php?PG=7" target="_blank">Jouer →</a>
+				</div>
+				<div class="card">
+					<h3>Anacroisés</h3>
+					<p>Mots croisés en anagrammes. Travaillez les définitions et les placements.</p>
+					<a href="https://www.scrabblecrds.fr/index.php?PG=7" target="_blank">Découvrir →</a>
+				</div>
+			</div>
+
+			<!-- ===== MODIFIEZ LES LISTES DE VOCABULAIRE ICI ===== -->
+			<h2 class="section-title">Listes de vocabulaire</h2>
+			<div class="list-group">
+				<div class="list-item">
+					<div><strong>Mots de 2 lettres</strong><br><small style="color:var(--muted)">Les indispensables (QI, WU, EX…)</small></div>
+					<a href="entrées_2_lettres.html" target="_blank">Voir la liste</a>
+				</div>
+				<div class="list-item">
+					<div><strong>Mots de 3 lettres</strong><br><small style="color:var(--muted)">QIS, QAT, EWE, etc.</small></div>
+					<a href="entrées_3_lettres.html" target="_blank">Voir la liste</a>
+				</div>
+				<div class="list-item">
+					<div><strong>Mots de 4 lettres</strong><br><small style="color:var(--muted)">Base solide pour le duplicate</small></div>
+					<a href="entrées_4_lettres.html" target="_blank">Voir la liste</a>
+				</div>
+				<div class="list-item">
+					<div>
+						<strong>Les verbes (4 à 9 lettres)</strong>
+						<br><small style="color:var(--muted)">ODS9 — Verbes complets et moins courants</small>
+					</div>
+					<a href="O9-VERBES.pdf" target="_blank">Télécharger</a>
+				</div>
+			</div>
+
+			<!-- ===== MODIFIEZ LES NOUVEAUTÉS ODS9 ICI ===== -->
+			<h2 class="section-title">Nouveautés ODS9</h2>
+			<div class="grid">
+				<div class="card">
+					<h3>Petits mots à lettres chères</h3>
+					<p>Les nouveaux mots courts avec J, Q, X, Y, Z, K, W…</p>
+					<a href="09F01-CHERES.pdf" target="_blank">Télécharger le PDF</a>
+				</div>
+				<div class="card">
+					<h3>Mots de 3 à 6 lettres</h3>
+					<p>Liste des nouveaux mots ODS9 dans cette longueur.</p>
+					<a href="Mot_3_6_lettres.pdf" target="_blank">Télécharger</a>
+				</div>
+				<div class="card">
+					<h3>Rallonges en 1 lettre</h3>
+					<p>Mots qui s’allongent d’une lettre + exercices.</p>
+					<a href="09F06-RALLONGES.pdf" target="_blank">Voir les rallonges</a>
+				</div>
+				<div class="card">
+					<h3>Nouveaux monômes</h3>
+					<p>Monômes de 7 et 8 lettres ajoutés dans l’ODS9.</p>
+					<a href="09-F07-MONOMES7.pdf" target="_blank">Monômes 7 lettres</a>
+				</div>
+			</div>
+
+			<!-- ===== MODIFIEZ LES LISTES THÉMATIQUES ICI ===== -->
+			<h2 class="section-title">Listes thématiques</h2>
+			<div class="grid">
+				<div class="card">
+					<h3>Jolis Coups</h3>
+					<p>Sélection de coups spectaculaires ou rares à étudier.</p>
+					<a href="https://www.scrabblecrds.fr/index.php?PG=7" target="_blank">Consulter</a>
+				</div>
+				<div class="card">
+					<h3>Mots voisins & Terminaisons</h3>
+					<p>Outils pour explorer les familles de mots et les terminaisons utiles.</p>
+					<a href="https://www.scrabblecrds.fr/index.php?PG=7" target="_blank">Explorer</a>
+				</div>
+				<div class="card">
+					<h3>Stats 100 000 parties</h3>
+					<p>Les mots les plus joués, statistiques par longueur, etc.</p>
+					<a href="https://www.scrabblecrds.fr/index.php?PG=7" target="_blank">Voir les stats</a>
+				</div>
+			</div>
+
+			<div class="card" style="margin-top:40px">
+				<h3>Conseil du club</h3>
+				<p>Travaillez régulièrement les mots de 2 et 3 lettres, les lettres chères et les nouveautés ODS. Même 15 minutes par semaine font une vraie différence.</p>
+				<p style="margin-top:12px"><a href="simulation.html" class="button">S’entraîner avec la simulation</a></p>
+			</div>
+		</div>
+	</main>
+
+	<footer id="contact">
+		<div class="footer-top">
+			<div class="container">
+				<ul class="footer-list">
+					<li><p class="footer-list-title">Contact</p></li>
+					<li class="footer-item">
+						<div class="contact-icon">
+							<i class="fa-solid fa-location-dot"></i>
+						</div>
+						<a class="contact-link" href="https://maps.app.goo.gl/TYZu6ZLYxySuh7oLA" target="_blank" rel="noopener noreferrer">Bazounkpa C/S TCHIAKPE GEVRON</a>
+					</li>
+					<li class="footer-item">
+						<div class="contact-icon">
+							<i class="fa-solid fa-phone"></i>
+						</div>
+						<a href="tel:+2290196801614" class="contact-link">+229 01 96 80 16 14</a>
+					</li>
+					<li class="footer-item">
+						<div class="contact-icon">
+							<i class="fa-solid fa-envelope"></i>
+						</div>
+						<a href="mailto:lafasc01@gmail.com" class="contact-link">lafasc01@gmail.com</a>
+					</li>
+				</ul>
+				<div class="footer-list">
+					<p class="footer-list-title">La Famille Scrabble</p>
+					<span>Le plaisir des mots, ensemble.</span>
+				</div>
+			</div>
+		</div>
+		<div class="footer-bottom">
+			<div class="container">
+				<p class="copyright">&copy; 2026 <a href="Accueil.html" class="copyright-link">La Famille Scrabble</a>. Tous droits réservés.</p>
+				<ul class="footer-bottom-list">
+					<li><a href="#" class="footer-bottom-link">Mentions légales</a></li>
+					<li><a href="#" class="footer-bottom-link">Politique de confidentialité</a></li>
+				</ul>
+			</div>
+		</div>
+	</footer>
+
+	<script>
+		const logoBtn = document.getElementById('logoMenuBtn');
+		const logoDropdown = document.getElementById('logoDropdown');
+
+		function toggleLogoMenu(forceClose = false) {
+			const isOpen = forceClose ? false : !logoDropdown.classList.contains('open');
+			logoDropdown.classList.toggle('open', isOpen);
+			logoBtn.setAttribute('aria-expanded', isOpen);
+		}
+
+		logoBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			toggleLogoMenu();
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!logoDropdown.contains(e.target) && !logoBtn.contains(e.target)) {
+				toggleLogoMenu(true);
+			}
+		});
+
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') {
+				toggleLogoMenu(true);
+			}
+		});
+	</script>
+</body>
+</html>

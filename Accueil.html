@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#090d0b">
+	<title>La Famille Scrabble — Jouons avec les mots</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="shortcut icon" href="logo1.png" type="image/svg+xml">
+	<style>
+		:root{color-scheme:dark;--bg:#090d0b;--panel:#111915;--green:#a4f36b;--muted:#a1aaa3;--line:rgba(255,255,255,.1)}
+		*{box-sizing:border-box}
+		html{scroll-behavior:smooth}
+		body{margin:0;background:var(--bg);color:#f4f7f3;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+		a{color:inherit;text-decoration:none}
+		.glow{position:absolute;z-index:-1;pointer-events:none;width:460px;height:460px;border-radius:50%;filter:blur(180px);opacity:.16;background:#55e58b;top:80px;left:45%}
+		
+		/* Header & Menu Logo Animé */
+		header{position:relative;z-index:50;width:min(1160px,calc(100% - 48px));height:88px;margin:auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+		.brand-wrapper{position:relative}
+		.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.03em;background:none;border:none;color:inherit;font-family:inherit;font-size:16px;padding:6px 10px 6px 0;cursor:pointer;border-radius:14px;transition:transform .2s}
+		.brand:hover{transform:translateY(-1px)}
+		.brand img{width:48px;height:48px;object-fit:contain;border-radius:12px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+		.brand[aria-expanded="true"] img{transform:rotate(-8deg) scale(1.06)}
+		.brand-chevron{font-size:12px;color:var(--green);margin-left:2px;transition:transform .3s ease}
+		.brand[aria-expanded="true"] .brand-chevron{transform:rotate(180deg)}
+
+		.logo-menu{position:absolute;top:calc(100% + 14px);left:0;width:310px;max-height:420px;overflow-y:auto;background:rgba(17,25,21,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(164,243,107,.25);border-radius:20px;padding:12px;box-shadow:0 24px 60px rgba(0,0,0,.75),0 0 40px rgba(164,243,107,.08);opacity:0;visibility:hidden;transform:translateY(-12px) scale(.96);transform-origin:top left;transition:opacity .28s ease,transform .32s cubic-bezier(.16,1,.3,1),visibility .28s}
+		.logo-menu.open{opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+		.logo-menu-header{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em;color:var(--green);padding:6px 12px 10px;border-bottom:1px solid var(--line);margin-bottom:8px}
+		.logo-menu-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+		.logo-menu-item{opacity:0;transform:translateX(-10px);transition:opacity .25s ease,transform .25s ease}
+		.logo-menu.open .logo-menu-item{opacity:1;transform:translateX(0)}
+		.logo-menu.open .logo-menu-item:nth-child(1){transition-delay:.03s}
+		.logo-menu.open .logo-menu-item:nth-child(2){transition-delay:.06s}
+		.logo-menu.open .logo-menu-item:nth-child(3){transition-delay:.09s}
+		.logo-menu.open .logo-menu-item:nth-child(4){transition-delay:.12s}
+		.logo-menu.open .logo-menu-item:nth-child(5){transition-delay:.15s}
+		.logo-menu.open .logo-menu-item:nth-child(6){transition-delay:.18s}
+		.logo-menu.open .logo-menu-item:nth-child(7){transition-delay:.21s}
+		.logo-menu.open .logo-menu-item:nth-child(8){transition-delay:.24s}
+
+		.logo-menu-link{display:flex;align-items:center;gap:12px;padding:8px 12px;border-radius:12px;transition:background .2s,transform .2s}
+		.logo-menu-link:hover{background:rgba(164,243,107,.12);transform:translateX(4px)}
+		.logo-menu-link.active{background:rgba(164,243,107,.08);border:1px solid rgba(164,243,107,.2)}
+		.menu-icon{width:30px;height:30px;border-radius:8px;background:#1a261c;color:var(--green);display:grid;place-items:center;font-size:13px;flex-shrink:0;transition:background .2s,color .2s}
+		.logo-menu-link:hover .menu-icon{background:var(--green);color:#10200f}
+		.menu-text{display:flex;flex-direction:column}
+		.menu-title{font-weight:700;font-size:13.5px;color:#f4f7f3}
+		.menu-desc{font-size:11.5px;color:var(--muted)}
+
+		nav{display:flex;align-items:center;gap:32px;color:#c1c9c2;font-size:14px}
+		nav a:not(.button):hover{color:var(--green)}
+		
+		/* Boutons */
+		.button{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:999px;padding:13px 20px;background:var(--green);color:#10200f;font-weight:750;font-size:14px;transition:transform .2s,box-shadow .2s,background .2s}
+		.button:hover,.button:focus,.button:active,nav a.button:hover,nav a.button:focus,nav a.button:active{color:#10200f;transform:translateY(-3px);box-shadow:0 10px 32px #a4f36b38}
+		.button.secondary{color:#f4f7f3;background:transparent;border:1px solid var(--line)}
+		.button.secondary:hover,.button.secondary:focus,.button.secondary:active{color:#f4f7f3;border-color:var(--green);box-shadow:none}
+
+		.hero{width:min(1160px,calc(100% - 48px));min-height:630px;margin:auto;display:grid;grid-template-columns:1.08fr .92fr;align-items:center;gap:40px;padding:72px 0 90px}
+		.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--green);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}.dot{width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 16px var(--green)}
+		h1{max-width:660px;margin:22px 0;font-size:clamp(48px,7vw,82px);line-height:.98;letter-spacing:-.075em}h1 span{color:var(--green)}
+		.intro{max-width:520px;color:var(--muted);font-size:17px;line-height:1.8}.actions{display:flex;gap:14px;align-items:center;margin-top:30px}
+		.visual{position:relative;display:grid;place-items:center;min-height:420px}.orbit{position:absolute;width:min(410px,90vw);aspect-ratio:1;border:1px solid #a4f36b25;border-radius:50%;animation:spin 30s linear infinite}.orbit:before,.orbit:after{content:"";position:absolute;border:1px solid #a4f36b20;border-radius:50%}.orbit:before{inset:30px}.orbit:after{inset:65px}.orbit i{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--green);top:22%;right:12%;box-shadow:0 0 20px var(--green)}
+		.logo-card{z-index:1;width:min(270px,65vw);height:270px;display:grid;place-items:center;border:1px solid #ffffff16;border-radius:35px;background:linear-gradient(145deg,#17221a,#0d120f);box-shadow:0 35px 100px #0009,0 0 70px #a4f36b12;animation:float 5s ease-in-out infinite}.logo-card img{width:76%;height:76%;object-fit:contain;filter:drop-shadow(0 10px 24px #a4f36b27)}
+		.tile{position:absolute;display:grid;place-items:center;width:57px;height:57px;background:#1a261c;border:1px solid #a4f36b55;border-radius:13px;color:var(--green);font-size:24px;font-weight:850;box-shadow:0 12px 30px #0008;animation:float 4s ease-in-out infinite}.tile.one{top:12%;left:10%;transform:rotate(-12deg)}.tile.two{bottom:14%;right:7%;transform:rotate(11deg);animation-delay:-2s}.tile.three{bottom:10%;left:12%;width:43px;height:43px;font-size:18px;animation-delay:-1s}
+		.stats{width:min(1160px,calc(100% - 48px));margin:0 auto 95px;display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:20px;background:#ffffff03}.stat{padding:25px 32px}.stat+.stat{border-left:1px solid var(--line)}.stat strong{display:block;color:var(--green);font-size:25px;letter-spacing:-.04em}.stat span{color:var(--muted);font-size:13px}
+		.about{width:min(1160px,calc(100% - 48px));margin:0 auto 60px;display:flex;align-items:end;justify-content:space-between;gap:32px}.about h2{max-width:600px;margin:14px 0 0;font-size:clamp(30px,4vw,48px);letter-spacing:-.06em}.about p{max-width:410px;margin:0;color:var(--muted);line-height:1.8}
+
+		/* Grille d'images moderne et alignée */
+		.Images_histoire {
+			width: min(1160px, calc(100% - 48px));
+			margin: 0 auto 100px;
+		}
+		.images {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+			gap: 20px;
+		}
+		.img-banner {
+			width: 100%;
+			height: 200px;
+			object-fit: cover;
+			border-radius: 16px;
+			border: 1px solid var(--line);
+			background: var(--panel);
+			transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+			margin: 0;
+		}
+		.img-banner:hover {
+			transform: translateY(-6px);
+			border-color: rgba(164,243,107,.4);
+			box-shadow: 0 16px 32px rgba(0,0,0,.5), 0 0 20px rgba(164,243,107,.1);
+		}
+
+		/* Footer amélioré */
+		footer{border-top:1px solid var(--line);margin-top:40px;background:#0c100e}
+		.footer-top{padding:50px 24px 30px}
+		.container{width:min(1160px,calc(100% - 48px));margin:auto}
+		.footer-list{list-style:none;padding:0;margin:0}
+		.footer-list-title{font-weight:700;font-size:18px;margin-bottom:16px;color:#fff}
+		.footer-item{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+		.contact-icon{width:36px;height:36px;display:grid;place-items:center;background:#1a261c;border-radius:10px;flex-shrink:0}
+		.contact-icon img{width:20px;height:20px;object-fit:contain}
+		.contact-icon i{color:var(--green);font-size:16px}
+		.contact-link{color:var(--muted);font-size:15px;transition:color .2s}
+		.contact-link:hover{color:var(--green)}
+		.footer-list:last-child{margin-top:8px}
+		.footer-list:last-child span{color:var(--muted);font-size:15px;line-height:1.6}
+		.footer-bottom{border-top:1px solid var(--line);padding:20px 24px}
+		.footer-bottom .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+		.copyright{margin:0;color:#818a82;font-size:13px}
+		.copyright-link{color:var(--green)}
+		.footer-bottom-list{display:flex;gap:20px;list-style:none;padding:0;margin:0}
+		.footer-bottom-link{color:#818a82;font-size:13px}
+		.footer-bottom-link:hover{color:var(--green)}
+
+		@keyframes float{0%,100%{translate:0 0}50%{translate:0 -12px}}@keyframes spin{to{transform:rotate(360deg)}}
+		@media(max-width:760px){
+			header{height:74px}nav{gap:16px}nav a:not(.button){display:none}
+			.logo-menu{width:min(310px,calc(100vw - 48px))}
+			.hero{grid-template-columns:1fr;padding:70px 0 50px;gap:10px}
+			.hero-copy{text-align:center}.intro{margin:auto}.actions{justify-content:center}
+			.visual{min-height:360px}.logo-card{height:230px;width:230px}
+			.stats{margin-bottom:70px}.stat{padding:20px 14px;text-align:center}.stat strong{font-size:21px}.stat span{font-size:11px}
+			.about{display:block;text-align:center}.about p{margin:18px auto 0}
+			.footer-bottom .container{flex-direction:column;text-align:center}
+			.footer-bottom-list{justify-content:center}
+		}
+		@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+	</style>
+</head>
+<body>
+	<div class="glow" aria-hidden="true"></div>
+	<header>
+		<div class="brand-wrapper">
+			<button type="button" class="brand" id="logoMenuBtn" aria-expanded="false" aria-controls="logoDropdown" aria-label="Ouvrir le menu des pages La Famille Scrabble">
+				<img src="logo1.png" alt="Logo La Famille Scrabble">
+				<span>La Famille Scrabble</span>
+				<i class="fa-solid fa-chevron-down brand-chevron" aria-hidden="true"></i>
+			</button>
+
+			<div class="logo-menu" id="logoDropdown" role="menu">
+				<div class="logo-menu-header">Toutes les pages du site</div>
+				<ul class="logo-menu-list">
+					<li class="logo-menu-item">
+						<a href="Accueil.html" class="logo-menu-link active" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-house"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Accueil</span>
+								<span class="menu-desc">Présentation générale</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="actualites.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-newspaper"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Actualités & Activités</span>
+								<span class="menu-desc">Dernières nouvelles du club</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="classique.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-chess-board"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Scrabble Classique</span>
+								<span class="menu-desc">Règles, tournois et classements</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="jeunes.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-child-reaching"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Section Jeunes</span>
+								<span class="menu-desc">Initiation et catégories scolaires</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="jeux-listes.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-book-open"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Jeux & Listes</span>
+								<span class="menu-desc">Vocabulaire et outils d'entraînement</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="resultats.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-trophy"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Résultats</span>
+								<span class="menu-desc">Compétitions et tournois du club</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="simulation.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-robot"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Simulation de partie</span>
+								<span class="menu-desc">S'entraîner contre l'IA</span>
+							</div>
+						</a>
+					</li>
+					<li class="logo-menu-item">
+						<a href="Contacts.html" class="logo-menu-link" role="menuitem">
+							<div class="menu-icon"><i class="fa-solid fa-paper-plane"></i></div>
+							<div class="menu-text">
+								<span class="menu-title">Nous rejoindre & Contacts</span>
+								<span class="menu-desc">Adhésion et formulaire</span>
+							</div>
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<nav aria-label="Navigation principale">
+			<a href="actualites.html">Le club</a>
+			<a href="actualites.html">Nos activités</a>
+			<a class="button" href="Contacts.html">Nous rejoindre <span aria-hidden="true">↗</span></a>
+		</nav>
+	</header>
+
+	<main>
+		<section class="hero" id="accueil">
+			<div class="hero-copy">
+				<div class="eyebrow"><span class="dot"></span> Bienvenue au club</div>
+				<h1>Les mots nous <span>rassemblent.</span></h1>
+				<p class="intro">Bienvenue chez La Famille Scrabble : un club où le plaisir des mots, le jeu et la convivialité se rencontrent. À vous de jouer !</p>
+				<div class="actions">
+					<a class="button" href="actualites.html">Découvrir le club <span aria-hidden="true">→</span></a>
+					<a class="button secondary" href="actualites.html">Nos activités</a>
+				</div>
+			</div>
+			<div class="visual" aria-label="Le logo du club entouré de lettres de Scrabble">
+				<div class="orbit" aria-hidden="true"><i></i></div>
+				<div class="tile one" aria-hidden="true">L</div>
+				<div class="tile two" aria-hidden="true">F</div>
+				<div class="tile three" aria-hidden="true">S</div>
+				<div class="logo-card">
+					<img src="logo1.png" alt="Logo du club La Famille Scrabble">
+				</div>
+			</div>
+		</section>
+		<section class="stats" id="activites" aria-label="L'esprit du club">
+			<div class="stat"><strong>Jouer</strong><span>Des parties pour tous les niveaux</span></div>
+			<div class="stat"><strong>Progresser</strong><span>Le plaisir d'apprendre ensemble</span></div>
+			<div class="stat"><strong>Partager</strong><span>Une communauté accueillante</span></div>
+		</section>
+		<section class="about" id="club">
+			<div>
+				<div class="eyebrow"><span class="dot"></span> Bien plus qu'un jeu</div>
+				<h2>Chaque partie est une nouvelle histoire.</h2>
+			</div>
+			<p>Débutant curieux ou passionné de longue date, prenez place autour du plateau. Ici, chaque mot compte — surtout ceux qu'on partage.</p>
+		</section>
+
+		<!-- Section Images réalignée et responsive -->
+		<section class="Images_histoire">
+			<div class="images">
+				<img src="img1.jpeg" alt="image1" class="img-banner">
+				<img src="img2.jpeg" alt="image2" class="img-banner">
+				<img src="img3.jpeg" alt="image3" class="img-banner">
+				<img src="img4.jpeg" alt="image4" class="img-banner">
+				<img src="img5.jpeg" alt="image5" class="img-banner">
+				<img src="img6.jpeg" alt="image6" class="img-banner">
+				<img src="img7.jpeg" alt="image7" class="img-banner">
+				<img src="img8.jpeg" alt="image8" class="img-banner">
+				<img src="img9.jpeg" alt="image9" class="img-banner">
+				<img src="img10.jpeg" alt="image10" class="img-banner">
+				<img src="img11.jpeg" alt="image11" class="img-banner">
+				<img src="img12.jpeg" alt="image12" class="img-banner">
+			</div>
+		</section>
+	</main>
+
+	<footer id="contact">
+		<div class="footer-top">
+			<div class="container">
+				<ul class="footer-list">
+					<li><p class="footer-list-title">Contact</p></li>
+					<li class="footer-item">
+						<div class="contact-icon">
+							<i class="fa-solid fa-location-dot"></i>
+						</div>
+						<a class="contact-link" href="https://maps.app.goo.gl/TYZu6ZLYxySuh7oLA" target="_blank" rel="noopener noreferrer">Bazounkpa C/S TCHIAKPE GEVRON</a>
+					</li>
+					<li class="footer-item">
+						<div class="contact-icon">
+							<i class="fa-solid fa-phone"></i>
+						</div>
+						<a href="tel:+2290196801614" class="contact-link">+229 01 96 80 16 14</a>
+					</li>
+					<li class="footer-item">
+						<div class="contact-icon">
+							<i class="fa-solid fa-envelope"></i>
+						</div>
+						<a href="mailto:lafasc01@gmail.com" class="contact-link">lafasc01@gmail.com</a>
+					</li>
+				</ul>
+				<div class="footer-list">
+					<p class="footer-list-title">La Famille Scrabble</p>
+					<span>Le plaisir des mots, ensemble.</span>
+				</div>
+			</div>
+		</div>
+		<div class="footer-bottom">
+			<div class="container">
+				<p class="copyright">&copy; 2026 <a href="Accueil.html" class="copyright-link">La Famille Scrabble</a>. Tous droits réservés.</p>
+				<ul class="footer-bottom-list">
+					<li><a href="#" class="footer-bottom-link">Mentions légales</a></li>
+					<li><a href="#" class="footer-bottom-link">Politique de confidentialité</a></li>
+				</ul>
+			</div>
+		</div>
+	</footer>
+
+	<script>
+		const logoBtn = document.getElementById('logoMenuBtn');
+		const logoDropdown = document.getElementById('logoDropdown');
+
+		function toggleLogoMenu(forceClose = false) {
+			const isOpen = forceClose ? false : !logoDropdown.classList.contains('open');
+			logoDropdown.classList.toggle('open', isOpen);
+			logoBtn.setAttribute('aria-expanded', isOpen);
+		}
+
+		logoBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			toggleLogoMenu();
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!logoDropdown.contains(e.target) && !logoBtn.contains(e.target)) {
+				toggleLogoMenu(true);
+			}
+		});
+
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') {
+				toggleLogoMenu(true);
+			}
+		});
+	</script>
+</body>
+</html>

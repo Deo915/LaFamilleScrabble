@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#090d0b">
+	<title>Résultats — La Famille Scrabble</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="shortcut icon" href="logo1.png" type="image/svg+xml">
+	<style>
+		:root{color-scheme:dark;--bg:#090d0b;--panel:#111915;--green:#a4f36b;--muted:#a1aaa3;--line:rgba(255,255,255,.1)}
+		*{box-sizing:border-box}
+		html{scroll-behavior:smooth}
+		body{margin:0;background:var(--bg);color:#f4f7f3;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+		a{color:inherit;text-decoration:none}
+		.glow{position:absolute;z-index:-1;pointer-events:none;width:460px;height:460px;border-radius:50%;filter:blur(180px);opacity:.16;background:#55e58b;top:80px;left:45%}
+		header{width:min(1160px,calc(100% - 48px));height:88px;margin:auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:relative;z-index:50}
+		
+		/* Conteneur du logo et menu déroulant */
+		.brand-wrapper{position:relative}
+		.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.03em;background:none;border:none;color:inherit;font-family:inherit;font-size:16px;cursor:pointer;padding:6px 10px 6px 0;border-radius:14px;transition:transform .2s}
+		.brand:hover{transform:translateY(-1px)}
+		.brand img{width:48px;height:48px;object-fit:contain;border-radius:12px;transition:transform .25s ease}
+		.brand:hover img{transform:scale(1.05)}
+		.brand .chevron{font-size:12px;color:var(--green);transition:transform .3s cubic-bezier(0.16, 1, 0.3, 1);margin-left:2px}
+		.brand[aria-expanded="true"] .chevron{transform:rotate(180deg)}
+
+		/* Menu animé */
+		.logo-dropdown{
+			position:absolute;
+			top:calc(100% + 12px);
+			left:0;
+			min-width:310px;
+			max-height:420px;
+			overflow-y:auto;
+			background:rgba(17, 25, 21, 0.96);
+			backdrop-filter:blur(14px);
+			-webkit-backdrop-filter:blur(14px);
+			border:1px solid rgba(164, 243, 107, 0.25);
+			border-radius:20px;
+			padding:12px;
+			box-shadow:0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(164, 243, 107, 0.08);
+			opacity:0;
+			visibility:hidden;
+			transform:translateY(-12px) scale(0.96);
+			transform-origin:top left;
+			transition:opacity .28s cubic-bezier(0.16, 1, 0.3, 1), transform .28s cubic-bezier(0.16, 1, 0.3, 1), visibility .28s;
+			z-index:100;
+		}
+		.logo-dropdown.open{
+			opacity:1;
+			visibility:visible;
+			transform:translateY(0) scale(1);
+		}
+		.dropdown-title{
+			font-size:11px;
+			font-weight:800;
+			text-transform:uppercase;
+			letter-spacing:.12em;
+			color:var(--green);
+			padding:6px 12px 10px;
+			border-bottom:1px solid var(--line);
+			margin-bottom:8px;
+		}
+		.dropdown-link{
+			display:flex;
+			align-items:center;
+			gap:12px;
+			padding:8px 12px;
+			border-radius:12px;
+			font-size:13.5px;
+			font-weight:600;
+			color:#e4ebe5;
+			transition:background .2s, color .2s, transform .2s;
+		}
+		.dropdown-link i{
+			width:30px;
+			height:30px;
+			border-radius:8px;
+			background:#1a261c;
+			color:var(--green);
+			display:grid;
+			place-items:center;
+			font-size:13px;
+			flex-shrink:0;
+		}
+		.dropdown-link:hover{
+			background:rgba(164, 243, 107, 0.14);
+			color:var(--green);
+			transform:translateX(4px);
+		}
+		.dropdown-link.active{
+			background:rgba(164, 243, 107, 0.08);
+			color:var(--green);
+			border:1px solid rgba(164, 243, 107, 0.2);
+		}
+
+		nav{display:flex;align-items:center;gap:32px;color:#c1c9c2;font-size:14px}
+		nav a:not(.button):hover{color:var(--green)}
+		.button{display:inline-flex;align-items:center;justify-content:center;gap:9px;border-radius:999px;padding:13px 20px;background:var(--green);color:#10200f;font-weight:750;font-size:14px;transition:transform .2s,box-shadow .2s}
+		.button:hover{transform:translateY(-3px);box-shadow:0 10px 32px #a4f36b38}
+
+		.page-header{width:min(1160px,calc(100% - 48px));margin:auto;padding:60px 0 30px}
+		.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--green);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+		.dot{width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 16px var(--green)}
+		h1{margin:18px 0 12px;font-size:clamp(40px,6vw,64px);line-height:1;letter-spacing:-.06em}
+		h1 span{color:var(--green)}
+		.lead{max-width:680px;color:var(--muted);font-size:17px;line-height:1.7}
+
+		.content{width:min(1160px,calc(100% - 48px));margin:0 auto 80px}
+		.section-title{font-size:26px;letter-spacing:-.04em;margin:48px 0 16px;color:var(--green)}
+		.result-list{display:flex;flex-direction:column;gap:10px}
+		.result-item{display:grid;grid-template-columns:110px 1fr auto;gap:16px;align-items:center;padding:16px 20px;background:#ffffff04;border:1px solid var(--line);border-radius:14px}
+		.result-item .date{color:var(--green);font-weight:800;font-size:14px}
+		.result-item .info strong{display:block;font-size:16px}
+		.result-item .info small{color:var(--muted);font-size:13px}
+		.result-item a{color:var(--green);font-weight:700;font-size:14px;white-space:nowrap}
+		.result-item a:hover{text-decoration:underline}
+
+		.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+		.filter-btn{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:13px;cursor:pointer}
+		.filter-btn.active,.filter-btn:hover{background:var(--green);color:#10200f;border-color:var(--green)}
+
+		footer{border-top:1px solid var(--line);margin-top:40px;background:#0c100e}
+		.footer-top{padding:50px 24px 30px}
+		.container{width:min(1160px,calc(100% - 48px));margin:auto}
+		.footer-list{list-style:none;padding:0;margin:0}
+		.footer-list-title{font-weight:700;font-size:18px;margin-bottom:16px;color:#fff}
+		.footer-item{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+		.contact-icon{width:36px;height:36px;display:grid;place-items:center;background:#1a261c;border-radius:10px;flex-shrink:0}
+		.contact-icon img{width:20px;height:20px;object-fit:contain}
+		.contact-icon i{color:var(--green);font-size:16px}
+		.contact-link{color:var(--muted);font-size:15px;transition:color .2s}
+		.contact-link:hover{color:var(--green)}
+		.footer-bottom{border-top:1px solid var(--line);padding:20px 24px}
+		.footer-bottom .container{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+		.copyright{margin:0;color:#818a82;font-size:13px}
+		.copyright-link{color:var(--green)}
+		.footer-bottom-list{display:flex;gap:20px;list-style:none;padding:0;margin:0}
+		.footer-bottom-link{color:#818a82;font-size:13px}
+		.footer-bottom-link:hover{color:var(--green)}
+
+		@media(max-width:760px){
+			header{height:74px}nav{gap:16px}nav a:not(.button){display:none}
+			.page-header{padding:40px 0 20px;text-align:center}
+			.lead{margin:auto}
+			.result-item{grid-template-columns:1fr;gap:8px}
+			.footer-bottom .container{flex-direction:column;text-align:center}
+			.footer-bottom-list{justify-content:center}
+		}
+		@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+	</style>
+</head>
+<body>
+	<div class="glow" aria-hidden="true"></div>
+	<header>
+		<div class="brand-wrapper">
+			<button type="button" class="brand" id="logoMenuBtn" aria-expanded="false" aria-controls="logoDropdown" aria-label="Ouvrir le menu de navigation">
+				<img src="logo1.png" alt="Logo La Famille Scrabble">
+				<span>La Famille Scrabble</span>
+				<i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+			</button>
+
+			<div class="logo-dropdown" id="logoDropdown" role="menu">
+				<div class="dropdown-title">Toutes les pages du site</div>
+				<a href="Accueil.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-house"></i>
+					<span>Accueil</span>
+				</a>
+				<a href="actualites.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-newspaper"></i>
+					<span>Actualités & Activités</span>
+				</a>
+				<a href="classique.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-chess-board"></i>
+					<span>Scrabble Classique</span>
+				</a>
+				<a href="jeunes.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-child-reaching"></i>
+					<span>Section Jeunes</span>
+				</a>
+				<a href="jeux-listes.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-book-open"></i>
+					<span>Jeux & Listes</span>
+				</a>
+				<a href="resultats.html" class="dropdown-link active" role="menuitem">
+					<i class="fa-solid fa-trophy"></i>
+					<span>Résultats</span>
+				</a>
+				<a href="simulation.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-robot"></i>
+					<span>Simulation de partie</span>
+				</a>
+				<a href="Contacts.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-paper-plane"></i>
+					<span>Nous rejoindre & Contacts</span>
+				</a>
+			</div>
+		</div>
+
+		<nav aria-label="Navigation principale">
+			<a href="jeunes.html">Jeunes</a>
+			<a href="classique.html">Classique</a>
+			<a href="jeux-listes.html">Jeux & Listes</a>
+			<a class="button" href="Contacts.html">Nous rejoindre</a>
+		</nav>
+	</header>
+
+	<main>
+		<section class="page-header">
+			<div class="eyebrow"><span class="dot"></span> Compétitions</div>
+			<h1>Les <span>Résultats</span></h1>
+			<p class="lead">Retrouvez ici les résultats des compétitions auxquelles les membres du club ont participé, ainsi que les principaux tournois régionaux.</p>
+		</section>
+
+		<div class="content">
+			<div class="filters">
+				<button class="filter-btn active">Tous</button>
+				<button class="filter-btn">Club</button>
+				<button class="filter-btn">Régionaux</button>
+				<button class="filter-btn">Simultanés</button>
+				<button class="filter-btn">Classique</button>
+				<button class="filter-btn">Jeunes</button>
+			</div>
+
+			<!-- ===== MODIFIEZ LES RÉSULTATS DU CLUB ICI ===== -->
+			<h2 class="section-title">Résultats du club</h2>
+			<div class="result-list">
+				<div class="result-item">
+					<div class="date">15/11/2026</div>
+					<div class="info">
+						<strong>Tournoi interne du club</strong>
+						<small>18 participants — Formule Duplicate</small>
+					</div>
+					<a href="#">Voir le classement</a>
+				</div>
+				<div class="result-item">
+					<div class="date">02/11/2026</div>
+					<div class="info">
+						<strong>Simultané du club</strong>
+						<small>Partie en 20 coups</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+			</div>
+
+			<!-- ===== MODIFIEZ LES CHAMPIONNATS RÉGIONAUX ICI ===== -->
+			<h2 class="section-title">Championnats régionaux</h2>
+			<div class="result-list">
+				<div class="result-item">
+					<div class="date">18/10/2026</div>
+					<div class="info">
+						<strong>Championnat Régional en Paires</strong>
+						<small>Participation du club</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+				<div class="result-item">
+					<div class="date">08/10/2026</div>
+					<div class="info">
+						<strong>Championnat Régional Individuel</strong>
+						<small>Octobre 2026</small>
+					</div>
+					<a href="#">Voir le classement</a>
+				</div>
+				<div class="result-item">
+					<div class="date">27/09/2026</div>
+					<div class="info">
+						<strong>Qualifications 1-2-3</strong>
+						<small>Championnat de France</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+			</div>
+
+			<!-- ===== MODIFIEZ LES TOURNOIS HOMOLOGUÉS ICI ===== -->
+			<h2 class="section-title">Tournois homologués</h2>
+			<div class="result-list">
+				<div class="result-item">
+					<div class="date">04/10/2026</div>
+					<div class="info">
+						<strong>TH3 de La Côte-St-André</strong>
+						<small>Tournoi homologué 3 parties</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+				<div class="result-item">
+					<div class="date">03/10/2026</div>
+					<div class="info">
+						<strong>Parties Originales — La Côte-St-André</strong>
+						<small>PO</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+			</div>
+
+			<!-- ===== MODIFIEZ LES SIMULTANÉS ICI ===== -->
+			<h2 class="section-title">Simultanés</h2>
+			<div class="result-list">
+				<div class="result-item">
+					<div class="date">20/06/2026</div>
+					<div class="info">
+						<strong>Simultané Parties Originales</strong>
+						<small>National</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+				<div class="result-item">
+					<div class="date">26/04/2026</div>
+					<div class="info">
+						<strong>Simultané Semi-Rapide</strong>
+						<small>Comité</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+				<div class="result-item">
+					<div class="date">06/10/2025</div>
+					<div class="info">
+						<strong>Simultané du Comité</strong>
+						<small>Plusieurs centres</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+			</div>
+
+			<!-- ===== MODIFIEZ LES FESTIVALS ICI ===== -->
+			<h2 class="section-title">Festivals</h2>
+			<div class="result-list">
+				<div class="result-item">
+					<div class="date">23/08/2026</div>
+					<div class="info">
+						<strong>Festival d’Evian — TH5</strong>
+						<small>Participation du club</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+				<div class="result-item">
+					<div class="date">06/11/2025</div>
+					<div class="info">
+						<strong>Festival d’Aix-les-Bains</strong>
+						<small>Retour des membres du club</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+			</div>
+
+			<!-- ===== MODIFIEZ LES RÉSULTATS CLASSIQUE ICI ===== -->
+			<h2 class="section-title">Scrabble Classique</h2>
+			<div class="result-list">
+				<div class="result-item">
+					<div class="date">01/03/2026</div>
+					<div class="info">
+						<strong>Championnat Régional Classique</strong>
+						<small>Formule Classique</small>
+					</div>
+					<a href="#">Voir le classement</a>
+				</div>
+				<div class="result-item">
+					<div class="date">07/02/2026</div>
+					<div class="info">
+						<strong>Tournoi Classique de La Côte-St-André</strong>
+						<small></small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+			</div>
+
+			<!-- ===== MODIFIEZ LES RÉSULTATS JEUNES ICI ===== -->
+			<h2 class="section-title">Jeunes & Scolaires</h2>
+			<div class="result-list">
+				<div class="result-item">
+					<div class="date">09/03/2025</div>
+					<div class="info">
+						<strong>Championnat Régional Scolaire</strong>
+						<small>Poussins et BJC — Noyarey</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+				<div class="result-item">
+					<div class="date">10/03/2024</div>
+					<div class="info">
+						<strong>Championnat Régional Scolaire</strong>
+						<small>Classement général</small>
+					</div>
+					<a href="#">Voir les résultats</a>
+				</div>
+			</div>
+
+			<div class="card" style="margin-top:40px;padding:28px;background:#ffffff04;border:1px solid var(--line);border-radius:20px">
+				<h3 style="margin:0 0 10px;color:var(--green)">Ajouter un résultat</h3>
+				<p style="margin:0;color:var(--muted);line-height:1.7">Pour ajouter un nouveau résultat, copiez un bloc <code style="background:#1a261c;padding:2px 6px;border-radius:4px"><div class="result-item">...</div></code> et modifiez la date, le titre et le lien.</p>
+			</div>
+		</div>
+	</main>
+
+	<footer id="contact">
+		<div class="footer-top">
+			<div class="container">
+				<ul class="footer-list">
+					<li><p class="footer-list-title">Contact</p></li>
+					<li class="footer-item">
+						<div class="contact-icon">
+							<i class="fa-solid fa-location-dot"></i>
+						</div>
+						<a class="contact-link" href="https://maps.app.goo.gl/TYZu6ZLYxySuh7oLA" target="_blank" rel="noopener noreferrer">Bazounkpa C/S TCHIAKPE GEVRON</a>
+					</li>
+					<li class="footer-item">
+						<div class="contact-icon">
+							<i class="fa-solid fa-phone"></i>
+						</div>
+						<a href="tel:+2290196801614" class="contact-link">+229 01 96 80 16 14</a>
+					</li>
+					<li class="footer-item">
+						<div class="contact-icon">
+							<i class="fa-solid fa-envelope"></i>
+						</div>
+						<a href="mailto:lafasc01@gmail.com" class="contact-link">lafasc01@gmail.com</a>
+					</li>
+				</ul>
+				<div class="footer-list">
+					<p class="footer-list-title">La Famille Scrabble</p>
+					<span>Le plaisir des mots, ensemble.</span>
+				</div>
+			</div>
+		</div>
+		<div class="footer-bottom">
+			<div class="container">
+				<p class="copyright">&copy; 2026 <a href="Accueil.html" class="copyright-link">La Famille Scrabble</a>. Tous droits réservés.</p>
+				<ul class="footer-bottom-list">
+					<li><a href="#" class="footer-bottom-link">Mentions légales</a></li>
+					<li><a href="#" class="footer-bottom-link">Politique de confidentialité</a></li>
+				</ul>
+			</div>
+		</div>
+	</footer>
+
+	<script>
+		const logoBtn = document.getElementById('logoMenuBtn');
+		const logoDropdown = document.getElementById('logoDropdown');
+
+		function toggleLogoMenu(forceClose = false) {
+			const isOpen = forceClose ? false : !logoDropdown.classList.contains('open');
+			logoDropdown.classList.toggle('open', isOpen);
+			logoBtn.setAttribute('aria-expanded', isOpen);
+		}
+
+		logoBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			toggleLogoMenu();
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!logoDropdown.contains(e.target) && !logoBtn.contains(e.target)) {
+				toggleLogoMenu(true);
+			}
+		});
+
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') {
+				toggleLogoMenu(true);
+			}
+		});
+	</script>
+</body>
+</html>

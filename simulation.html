@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#090d0b">
+	<title>Simulation Classique — La Famille Scrabble</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="shortcut icon" href="logo1.png" type="image/svg+xml">
+	<style>
+		:root{color-scheme:dark;--bg:#090d0b;--panel:#111915;--green:#a4f36b;--muted:#a1aaa3;--line:rgba(255,255,255,.1)}
+		*{box-sizing:border-box}
+		html{scroll-behavior:smooth}
+		body{margin:0;background:var(--bg);color:#f4f7f3;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+		a{color:inherit;text-decoration:none}
+		header{width:min(1160px,calc(100% - 48px));height:88px;margin:auto;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);position:relative;z-index:50}
+		
+		/* Conteneur du logo et menu déroulant */
+		.brand-wrapper{position:relative}
+		.brand{display:flex;align-items:center;gap:12px;font-weight:750;letter-spacing:-.03em;background:none;border:none;color:inherit;font-family:inherit;font-size:16px;cursor:pointer;padding:6px 10px 6px 0;border-radius:14px;transition:transform .2s}
+		.brand:hover{transform:translateY(-1px)}
+		.brand img{width:48px;height:48px;object-fit:contain;border-radius:12px;transition:transform .25s ease}
+		.brand:hover img{transform:scale(1.05)}
+		.brand .chevron{font-size:12px;color:var(--green);transition:transform .3s cubic-bezier(0.16, 1, 0.3, 1);margin-left:2px}
+		.brand[aria-expanded="true"] .chevron{transform:rotate(180deg)}
+
+		/* Menu animé */
+		.logo-dropdown{
+			position:absolute;
+			top:calc(100% + 12px);
+			left:0;
+			min-width:310px;
+			max-height:420px;
+			overflow-y:auto;
+			background:rgba(17, 25, 21, 0.96);
+			backdrop-filter:blur(14px);
+			-webkit-backdrop-filter:blur(14px);
+			border:1px solid rgba(164, 243, 107, 0.25);
+			border-radius:20px;
+			padding:12px;
+			box-shadow:0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(164, 243, 107, 0.08);
+			opacity:0;
+			visibility:hidden;
+			transform:translateY(-12px) scale(0.96);
+			transform-origin:top left;
+			transition:opacity .28s cubic-bezier(0.16, 1, 0.3, 1), transform .28s cubic-bezier(0.16, 1, 0.3, 1), visibility .28s;
+			z-index:100;
+		}
+		.logo-dropdown.open{
+			opacity:1;
+			visibility:visible;
+			transform:translateY(0) scale(1);
+		}
+		.dropdown-title{
+			font-size:11px;
+			font-weight:800;
+			text-transform:uppercase;
+			letter-spacing:.12em;
+			color:var(--green);
+			padding:6px 12px 10px;
+			border-bottom:1px solid var(--line);
+			margin-bottom:8px;
+		}
+		.dropdown-link{
+			display:flex;
+			align-items:center;
+			gap:12px;
+			padding:8px 12px;
+			border-radius:12px;
+			font-size:13.5px;
+			font-weight:600;
+			color:#e4ebe5;
+			transition:background .2s, color .2s, transform .2s;
+		}
+		.dropdown-link i{
+			width:30px;
+			height:30px;
+			border-radius:8px;
+			background:#1a261c;
+			color:var(--green);
+			display:grid;
+			place-items:center;
+			font-size:13px;
+			flex-shrink:0;
+		}
+		.dropdown-link:hover{
+			background:rgba(164, 243, 107, 0.14);
+			color:var(--green);
+			transform:translateX(4px);
+		}
+		.dropdown-link.active{
+			background:rgba(164, 243, 107, 0.08);
+			color:var(--green);
+			border:1px solid rgba(164, 243, 107, 0.2);
+		}
+
+		nav{display:flex;align-items:center;gap:32px;color:#c1c9c2;font-size:14px}
+		nav a:not(.button):hover{color:var(--green)}
+		.button{display:inline-flex;align-items:center;gap:9px;border-radius:999px;padding:13px 20px;background:var(--green);color:#10200f;font-weight:750;font-size:14px}
+
+		.sim-wrapper{width:min(1200px,calc(100% - 32px));margin:30px auto;display:grid;grid-template-columns:1fr 340px;gap:28px}
+		.board-container{background:#0e1411;border:1px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;align-items:center}
+		.board{display:grid;grid-template-columns:repeat(15,1fr);gap:2px;width:min(680px,100%);aspect-ratio:1;background:#1a261c;padding:6px;border-radius:12px}
+		.cell{aspect-ratio:1;display:grid;place-items:center;font-size:11px;font-weight:700;border-radius:4px;cursor:pointer;position:relative;user-select:none}
+		.cell.empty{background:#243028}
+		.cell.tw{background:#1e4d3a;color:#a4f36b}
+		.cell.tl{background:#2a5c42;color:#c8ff9a}
+		.cell.dw{background:#3a2a4d;color:#d4b5ff}
+		.cell.dl{background:#4a3a5d;color:#e8d5ff}
+		.cell.star{background:#a4f36b;color:#10200f;font-size:16px}
+		.cell.occupied{background:#f4f7f3;color:#10200f;font-weight:850;font-size:18px;box-shadow:0 2px 6px #0004}
+		.cell.occupied small{position:absolute;bottom:1px;right:2px;font-size:9px;font-weight:700;color:#555}
+
+		.sidebar{display:flex;flex-direction:column;gap:16px}
+		.panel{background:#111915;border:1px solid var(--line);border-radius:16px;padding:18px}
+		.panel h3{margin:0 0 12px;font-size:16px;color:var(--green)}
+		.rack{display:flex;gap:6px;flex-wrap:wrap;min-height:58px}
+		.tile{width:46px;height:50px;background:#f4f7f3;color:#10200f;border-radius:8px;display:grid;place-items:center;font-weight:850;font-size:20px;position:relative;cursor:grab;box-shadow:0 3px 8px #0006}
+		.tile small{position:absolute;bottom:2px;right:3px;font-size:10px;font-weight:700}
+		.tile.selected{outline:3px solid var(--green);transform:translateY(-4px)}
+		.tile.blank{background:#e8e8e8}
+
+		.scores{display:flex;justify-content:space-between;font-size:15px}
+		.scores strong{color:var(--green);font-size:22px}
+		.controls{display:flex;flex-direction:column;gap:10px}
+		.controls button{padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer;font-size:14px}
+		.btn-play{background:var(--green);color:#10200f}
+		.btn-pass{background:#1a261c;color:#f4f7f3;border:1px solid var(--line)}
+		.btn-exchange{background:#1a261c;color:#f4f7f3;border:1px solid var(--line)}
+		.log{max-height:200px;overflow-y:auto;font-size:13px;color:var(--muted);line-height:1.5}
+		.log div{padding:4px 0;border-bottom:1px solid #ffffff08}
+
+		footer{border-top:1px solid var(--line);margin-top:40px;background:#0c100e;padding:30px 24px;text-align:center;color:#818a82;font-size:13px}
+
+		@media(max-width:900px){
+			.sim-wrapper{grid-template-columns:1fr}
+			.board{width:100%}
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<div class="brand-wrapper">
+			<button type="button" class="brand" id="logoMenuBtn" aria-expanded="false" aria-controls="logoDropdown" aria-label="Ouvrir le menu de navigation">
+				<img src="logo1.png" alt="Logo La Famille Scrabble">
+				<span>La Famille Scrabble</span>
+				<i class="fa-solid fa-chevron-down chevron" aria-hidden="true"></i>
+			</button>
+
+			<div class="logo-dropdown" id="logoDropdown" role="menu">
+				<div class="dropdown-title">Toutes les pages du site</div>
+				<a href="Accueil.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-house"></i>
+					<span>Accueil</span>
+				</a>
+				<a href="actualites.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-newspaper"></i>
+					<span>Actualités & Activités</span>
+				</a>
+				<a href="classique.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-chess-board"></i>
+					<span>Scrabble Classique</span>
+				</a>
+				<a href="jeunes.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-child-reaching"></i>
+					<span>Section Jeunes</span>
+				</a>
+				<a href="jeux-listes.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-book-open"></i>
+					<span>Jeux & Listes</span>
+				</a>
+				<a href="resultats.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-trophy"></i>
+					<span>Résultats</span>
+				</a>
+				<a href="simulation.html" class="dropdown-link active" role="menuitem">
+					<i class="fa-solid fa-robot"></i>
+					<span>Simulation de partie</span>
+				</a>
+				<a href="Contacts.html" class="dropdown-link" role="menuitem">
+					<i class="fa-solid fa-paper-plane"></i>
+					<span>Nous rejoindre & Contacts</span>
+				</a>
+			</div>
+		</div>
+
+		<nav>
+			<a href="classique.html">Classique</a>
+			<a href="jeux-listes.html">Jeux & Listes</a>
+			<a class="button" href="Contacts.html">Nous rejoindre</a>
+		</nav>
+	</header>
+
+	<div class="sim-wrapper">
+		<div class="board-container">
+			<h2 style="margin:0 0 16px;font-size:20px">Simulation Classique</h2>
+			<div class="board" id="board"></div>
+		</div>
+
+		<div class="sidebar">
+			<div class="panel">
+				<h3>Scores</h3>
+				<div class="scores">
+					<div>Vous<br><strong id="scorePlayer">0</strong></div>
+					<div style="text-align:right">Ordinateur<br><strong id="scoreAI">0</strong></div>
+				</div>
+			</div>
+
+			<div class="panel">
+				<h3>Votre chevalet</h3>
+				<div class="rack" id="rack"></div>
+			</div>
+
+			<div class="panel">
+				<div class="controls">
+					<button class="btn-play" id="btnPlay">Valider le coup</button>
+					<button class="btn-pass" id="btnPass">Passer</button>
+					<button class="btn-exchange" id="btnExchange">Échanger des lettres</button>
+					<button class="btn-pass" id="btnNew">Nouvelle partie</button>
+				</div>
+			</div>
+
+			<div class="panel">
+				<h3>Historique</h3>
+				<div class="log" id="log"></div>
+			</div>
+		</div>
+	</div>
+
+	<footer>
+		&copy; 2026 La Famille Scrabble — Simulation de partie Classique
+	</footer>
+	<script>
+		const logoBtn = document.getElementById('logoMenuBtn');
+		const logoDropdown = document.getElementById('logoDropdown');
+
+		function toggleLogoMenu(forceClose = false) {
+			const isOpen = forceClose ? false : !logoDropdown.classList.contains('open');
+			logoDropdown.classList.toggle('open', isOpen);
+			logoBtn.setAttribute('aria-expanded', isOpen);
+		}
+
+		logoBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			toggleLogoMenu();
+		});
+
+		document.addEventListener('click', (e) => {
+			if (!logoDropdown.contains(e.target) && !logoBtn.contains(e.target)) {
+				toggleLogoMenu(true);
+			}
+		});
+
+		document.addEventListener('keydown', (e) => {
+			if (e.key === 'Escape') {
+				toggleLogoMenu(true);
+			}
+		});
+	</script>
+
+	<script>
+		// Distribution des lettres (français)
+		const TILES = {
+			A:9, B:2, C:2, D:3, E:15, F:2, G:2, H:2, I:8, J:1, K:1, L:5, M:3,
+			N:6, O:6, P:2, Q:1, R:6, S:6, T:6, U:6, V:2, W:1, X:1, Y:1, Z:1, '*':2
+		};
+		const POINTS = {
+			A:1, B:3, C:3, D:2, E:1, F:4, G:2, H:4, I:1, J:8, K:10, L:1, M:2,
+			N:1, O:1, P:3, Q:8, R:1, S:1, T:1, U:1, V:4, W:10, X:10, Y:10, Z:10, '*':0
+		};
+
+		// Bonus du plateau (15x15)
+		const BONUS = [
+			[ 'tw','','','dl','','','','tw','','','','dl','','','tw' ],
+			[ '','dw','','','','tl','','','','tl','','','','dw','' ],
+			[ '','','dw','','','','dl','','dl','','','','dw','','' ],
+			[ 'dl','','','dw','','','','dl','','','','dw','','','dl' ],
+			[ '','','','','dw','','','','','','dw','','','','' ],
+			[ '','tl','','','','tl','','','','tl','','','','tl','' ],
+			[ '','','dl','','','','dl','','dl','','','','dl','','' ],
+			[ 'tw','','','dl','','','','star','','','','dl','','','tw' ],
+			[ '','','dl','','','','dl','','dl','','','','dl','','' ],
+			[ '','tl','','','','tl','','','','tl','','','','tl','' ],
+			[ '','','','','dw','','','','','','dw','','','','' ],
+			[ 'dl','','','dw','','','','dl','','','','dw','','','dl' ],
+			[ '','','dw','','','','dl','','dl','','','','dw','','' ],
+			[ '','dw','','','','tl','','','','tl','','','','dw','' ],
+			[ 'tw','','','dl','','','','tw','','','','dl','','','tw' ]
+		];
+
+		let bag = [];
+		let board = Array.from({length:15}, () => Array(15).fill(null));
+		let rack = [];
+		let selectedTile = null;
+		let placedThisTurn = [];
+		let scorePlayer = 0;
+		let scoreAI = 0;
+
+		function initBag() {
+			bag = [];
+			for (const [letter, count] of Object.entries(TILES)) {
+				for (let i = 0; i < count; i++) bag.push(letter);
+			}
+			bag.sort(() => Math.random() - 0.5);
+		}
+
+		function drawTiles(n) {
+			const drawn = [];
+			for (let i = 0; i < n && bag.length; i++) {
+				drawn.push(bag.pop());
+			}
+			return drawn;
+		}
+
+		function renderBoard() {
+			const boardEl = document.getElementById('board');
+			boardEl.innerHTML = '';
+			for (let y = 0; y < 15; y++) {
+				for (let x = 0; x < 15; x++) {
+					const cell = document.createElement('div');
+					cell.className = 'cell';
+					const bonus = BONUS[y][x];
+					if (bonus === 'star') { cell.classList.add('star'); cell.textContent = '★'; }
+					else if (bonus) { cell.classList.add(bonus); cell.textContent = bonus.toUpperCase(); }
+					else cell.classList.add('empty');
+
+					if (board[y][x]) {
+						cell.classList.add('occupied');
+						cell.innerHTML = board[y][x].letter + '<small>' + board[y][x].points + '</small>';
+					}
+
+					cell.dataset.x = x;
+					cell.dataset.y = y;
+					cell.addEventListener('click', () => onCellClick(x, y));
+					boardEl.appendChild(cell);
+				}
+			}
+		}
+
+		function renderRack() {
+			const rackEl = document.getElementById('rack');
+			rackEl.innerHTML = '';
+			rack.forEach((letter, i) => {
+				const tile = document.createElement('div');
+				tile.className = 'tile' + (letter === '*' ? ' blank' : '');
+				tile.innerHTML = (letter === '*' ? '?' : letter) + '<small>' + POINTS[letter] + '</small>';
+				tile.dataset.index = i;
+				tile.addEventListener('click', () => selectTile(i));
+				if (selectedTile === i) tile.classList.add('selected');
+				rackEl.appendChild(tile);
+			});
+		}
+
+		function selectTile(index) {
+			selectedTile = selectedTile === index ? null : index;
+			renderRack();
+		}
+
+		function onCellClick(x, y) {
+			if (selectedTile === null || board[y][x]) return;
+			const letter = rack[selectedTile];
+			board[y][x] = { letter: letter === '*' ? 'A' : letter, points: POINTS[letter], blank: letter === '*' };
+			placedThisTurn.push({ x, y, index: selectedTile });
+			rack.splice(selectedTile, 1);
+			selectedTile = null;
+			renderBoard();
+			renderRack();
+		}
+
+		function calculateScore() {
+			let score = 0;
+			const words = [];
+
+			for (const p of placedThisTurn) {
+				let word = '';
+				let wordScore = 0;
+				let mult = 1;
+				let startX = p.x;
+				while (startX > 0 && board[p.y][startX-1]) startX--;
+				for (let x = startX; x < 15 && board[p.y][x]; x++) {
+					const t = board[p.y][x];
+					word += t.letter;
+					let pts = t.points;
+					const bonus = BONUS[p.y][x];
+					if (placedThisTurn.some(pl => pl.x === x && pl.y === p.y)) {
+						if (bonus === 'dl') pts *= 2;
+						if (bonus === 'tl') pts *= 3;
+						if (bonus === 'dw' || bonus === 'star') mult *= 2;
+						if (bonus === 'tw') mult *= 3;
+					}
+					wordScore += pts;
+				}
+				if (word.length > 1) {
+					wordScore *= mult;
+					if (placedThisTurn.length === 7) wordScore += 50;
+					score += wordScore;
+					words.push(word + ' (+' + wordScore + ')');
+				}
+			}
+			return { score, words };
+		}
+
+		function log(msg) {
+			const el = document.getElementById('log');
+			el.innerHTML = '<div>' + msg + '</div>' + el.innerHTML;
+		}
+
+		document.getElementById('btnPlay').addEventListener('click', () => {
+			if (!placedThisTurn.length) return alert('Placez au moins une lettre');
+			const result = calculateScore();
+			scorePlayer += result.score;
+			document.getElementById('scorePlayer').textContent = scorePlayer;
+			log('Vous : ' + result.words.join(', ') + ' → ' + result.score + ' pts');
+			placedThisTurn = [];
+			rack.push(...drawTiles(7 - rack.length));
+			renderRack();
+			setTimeout(aiPlay, 800);
+		});
+
+		document.getElementById('btnPass').addEventListener('click', () => {
+			placedThisTurn.forEach(p => {
+				rack.push(board[p.y][p.x].blank ? '*' : board[p.y][p.x].letter);
+				board[p.y][p.x] = null;
+			});
+			placedThisTurn = [];
+			renderBoard();
+			renderRack();
+			log('Vous passez');
+			setTimeout(aiPlay, 600);
+		});
+
+		document.getElementById('btnExchange').addEventListener('click', () => {
+			if (bag.length < 7) return alert('Pas assez de lettres dans le sac');
+			rack = drawTiles(7);
+			renderRack();
+			log('Vous échangez vos lettres');
+			setTimeout(aiPlay, 600);
+		});
+
+		function aiPlay() {
+			if (rack.length === 0 && bag.length === 0) {
+				log('Partie terminée');
+				return;
+			}
+			const aiScore = Math.floor(Math.random() * 25) + 8;
+			scoreAI += aiScore;
+			document.getElementById('scoreAI').textContent = scoreAI;
+			log('Ordinateur joue un mot (+' + aiScore + ' pts)');
+		}
+
+		document.getElementById('btnNew').addEventListener('click', startGame);
+
+		function startGame() {
+			initBag();
+			board = Array.from({length:15}, () => Array(15).fill(null));
+			rack = drawTiles(7);
+			scorePlayer = 0;
+			scoreAI = 0;
+			placedThisTurn = [];
+			selectedTile = null;
+			document.getElementById('scorePlayer').textContent = '0';
+			document.getElementById('scoreAI').textContent = '0';
+			document.getElementById('log').innerHTML = '';
+			renderBoard();
+			renderRack();
+			log('Nouvelle partie commencée. Placez votre premier mot au centre.');
+		}
+
+		startGame();
+	</script>
+</body>
+</html>
